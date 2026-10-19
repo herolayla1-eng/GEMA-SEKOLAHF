@@ -1,0 +1,3385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="GEMA SEKOLAH - Generator Soal SD, SMP, SMA/SMK + TKA" />
+  <title>GEMA Generasi Emas</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <!-- jsPDF + html2canvas (PDF = hasil layar) + Noto Sans -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="fonts-noto.js"></script>
+  <!-- KaTeX for LaTeX rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; padding-bottom: 40px;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 16px; }
+    header {
+      text-align: center; padding: 20px 0 16px;
+      background: linear-gradient(180deg, #0a0a12 0%, #0f172a 100%);
+      border-radius: 0 0 20px 20px; margin: -16px -16px 16px -16px;
+      padding-top: 28px;
+    }
+    header .logo-img {
+      height: 60px; width: auto; display: block; margin: 0 auto 6px;
+      filter: drop-shadow(0 0 12px rgba(255,215,0,0.35));
+    }
+    header .logo-sub {
+      color: #FFD700; font-size: 0.85rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+    header p { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 0.85rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
+    }
+    label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--muted); }
+    input[type="password"], input[type="text"], select, textarea {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); font-size: 1rem; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 20px; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-success { background: var(--success); color: white; margin-top: 10px; }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px; }
+    .log-box {
+      background: #020617; border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; font-family: monospace; font-size: 0.8rem; color: #94a3b8;
+      max-height: 120px; overflow-y: auto; white-space: pre-wrap; margin-top: 12px;
+    }
+    .log-box .ok { color: var(--success); }
+    .log-box .err { color: var(--danger); }
+    .log-box .info { color: #60a5fa; }
+    .question-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .q-number {
+      display: inline-block; background: var(--primary); color: white;
+      font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px;
+    }
+    .q-text { font-size: 1.05rem; margin-bottom: 16px; line-height: 1.6; }
+    .options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .option {
+      display: flex; gap: 10px; padding: 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem;
+    }
+    .option .letter { font-weight: 700; color: var(--primary); min-width: 22px; }
+    .answer-box {
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+    }
+    .answer-box strong { color: var(--success); }
+    .pembahasan {
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; color: var(--muted);
+    }
+    .pembahasan strong { color: #60a5fa; }
+    .katex { color: var(--text); font-size: 1.05em; }
+    .katex-display { margin: 0.6em 0; overflow-x: auto; }
+    .graph-wrap {
+      margin: 12px 0; padding: 10px; background: #0b1220;
+      border: 1px solid var(--border); border-radius: 10px; text-align: center;
+    }
+    .graph-wrap canvas { max-width: 100%; height: auto; background: #fff; border-radius: 6px; }
+    .graph-caption { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+    /* Area cetak PDF (di luar layar) — WAJIB tema terang, opsi kebaca */
+    #pdf-print-root {
+      position: fixed; left: -12000px; top: 0; width: 794px;
+      background: #ffffff !important; color: #111827 !important;
+      padding: 28px 32px;
+      font-family: "Noto Sans", system-ui, sans-serif; z-index: -1;
+    }
+    #pdf-print-root .question-card {
+      background: #ffffff !important; border: 1px solid #e5e7eb !important;
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+      color: #111827 !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    #pdf-print-root .q-number { font-weight: 700; margin-bottom: 6px; color: #1e3a8a !important; }
+    #pdf-print-root .q-text { color: #111827 !important; }
+    #pdf-print-root .options { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+    #pdf-print-root .option {
+      display: flex !important; gap: 10px !important; margin: 0 !important;
+      padding: 10px 12px !important;
+      background: #ffffff !important;
+      color: #111827 !important;
+      border: 1px solid #d1d5db !important;
+      border-radius: 8px !important;
+      font-size: 0.95rem !important;
+    }
+    #pdf-print-root .option .letter,
+    #pdf-print-root .option strong {
+      color: #1d4ed8 !important; font-weight: 700 !important; min-width: 22px;
+    }
+    #pdf-print-root .answer-box {
+      margin-top: 8px !important; padding: 10px 12px !important;
+      background: #ecfdf5 !important; border: 1px solid #a7f3d0 !important;
+      border-radius: 8px !important; color: #047857 !important; font-weight: 600 !important;
+    }
+    #pdf-print-root .pembahasan {
+      margin-top: 8px !important; padding: 10px 12px !important;
+      background: #f8fafc !important; border: 1px solid #e2e8f0 !important;
+      border-radius: 8px !important; font-size: 0.92rem !important; color: #374151 !important;
+    }
+    #pdf-print-root .pembahasan strong { color: #1d4ed8 !important; }
+    #pdf-print-root .katex,
+    #pdf-print-root .katex * { color: #111827 !important; }
+    #pdf-print-root .graph-wrap { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+    .card-actions {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+      padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .btn-sm {
+      padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card); color: var(--text);
+      cursor: pointer;
+    }
+    .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm-danger { border-color: #7f1d1d; color: #fca5a5; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9998;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 24px 12px; overflow-y: auto;
+    }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      width: 100%; max-width: 560px; padding: 18px; margin-bottom: 40px;
+    }
+    .modal-box h3 { margin: 0 0 12px; font-size: 1.05rem; }
+    .modal-box label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
+    .modal-box input, .modal-box textarea, .modal-box select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font-size: 0.9rem; box-sizing: border-box;
+    }
+    .modal-box textarea { min-height: 72px; resize: vertical; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    /* CONVERSATION — chat latihan bahasa */
+    .conversation-box {
+      background: linear-gradient(160deg, #052e16 0%, #14532d 40%, #3f1d1d 100%);
+      border: 2px solid #22c55e;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.15);
+    }
+    .conversation-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 6px; gap: 8px; flex-wrap: wrap;
+    }
+    .conversation-title {
+      font-weight: 800; font-size: 1rem; letter-spacing: 0.04em;
+      color: #bbf7d0;
+    }
+    .conversation-timer {
+      font-weight: 800; font-size: 1.05rem; color: #fecaca;
+      background: rgba(0,0,0,0.35); padding: 4px 12px; border-radius: 999px;
+      border: 1px solid #f87171; min-width: 56px; text-align: center;
+    }
+    .conversation-timer.running { color: #fef08a; border-color: #facc15; }
+    .conversation-timer.done { color: #fca5a5; border-color: #ef4444; }
+    .conversation-hint { font-size: 0.8rem; color: #d1fae5; margin: 0 0 12px; opacity: 0.9; }
+    .conv-lang-row {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin-bottom: 10px;
+    }
+    .conv-lang-row label {
+      font-size: 0.8rem; color: #bbf7d0; font-weight: 600;
+    }
+    .conv-lang-row select {
+      flex: 1; min-width: 160px; padding: 8px 10px; border-radius: 10px;
+      border: 1px solid #22c55e; background: rgba(0,0,0,0.35); color: #f0fdf4;
+      font-size: 0.85rem;
+    }
+    .conv-lang-support {
+      font-size: 0.75rem; color: #a7f3d0; width: 100%;
+    }
+    .conv-lang-support.warn { color: #fde68a; }
+    .conv-lang-support.bad { color: #fca5a5; }
+    .conv-chat {
+      max-height: 280px; overflow-y: auto; padding: 10px;
+      background: rgba(0,0,0,0.28); border-radius: 12px;
+      margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .conv-bubble {
+      max-width: 88%; padding: 10px 12px; border-radius: 12px;
+      font-size: 0.9rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word;
+    }
+    .conv-bubble.user {
+      align-self: flex-end; background: #166534; color: #f0fdf4;
+      border-bottom-right-radius: 4px;
+    }
+    .conv-bubble.gema {
+      align-self: flex-start; background: #1e293b; color: #e2e8f0;
+      border: 1px solid #334155; border-bottom-left-radius: 4px;
+    }
+    .conv-bubble .who { font-size: 0.7rem; opacity: 0.75; margin-bottom: 4px; font-weight: 700; }
+    .conv-input-row { display: flex; gap: 8px; align-items: flex-end; }
+    .conv-input-row textarea {
+      flex: 1; min-height: 44px; max-height: 100px; resize: vertical;
+      border-radius: 12px; border: 1px solid #22c55e; background: rgba(0,0,0,0.35);
+      color: #f0fdf4; padding: 10px 12px; font-size: 0.9rem;
+    }
+    .conversation-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .btn-conv {
+      flex: 1; min-width: 90px; padding: 11px 10px; border-radius: 12px;
+      border: none; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    }
+    .btn-conv:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-mic { background: #ef4444; color: #fff; }
+    .btn-mic.recording { background: #b91c1c; box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
+    .btn-send { background: #22c55e; color: #052e16; }
+    .btn-speak { background: #3b82f6; color: #fff; }
+    .btn-clear-conv { background: #7f1d1d; color: #fecaca; }
+    .conversation-status {
+      margin-top: 8px; font-size: 0.8rem; color: #bbf7d0; min-height: 1.2em;
+    }
+
+    /* Quota exhausted modal — view only */
+    .quota-modal-backdrop {
+      position: fixed; inset: 0; z-index: 99999;
+      background: rgba(0,0,0,0.82);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .quota-modal {
+      background: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      border: 2px solid #f59e0b;
+      border-radius: 20px;
+      padding: 24px 20px;
+      max-width: 380px; width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.25);
+      color: #f8fafc;
+    }
+    .quota-modal h2 {
+      margin: 0 0 12px; font-size: 1.25rem; line-height: 1.3;
+    }
+    .quota-modal .quota-stats {
+      background: rgba(0,0,0,0.35); border-radius: 12px;
+      padding: 12px; margin: 12px 0; font-size: 0.95rem;
+      border: 1px solid #334155;
+    }
+    .quota-modal .quota-msg {
+      font-size: 0.9rem; color: #cbd5e1; margin: 0 0 16px; line-height: 1.45;
+    }
+    .quota-modal .quota-actions {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .quota-modal .btn-upgrade {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      color: #fff; border: none; border-radius: 12px;
+      padding: 14px 16px; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+    }
+    .quota-modal .btn-wait {
+      background: transparent; color: #94a3b8;
+      border: 1px solid #475569; border-radius: 12px;
+      padding: 12px 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+    }
+
+    .upgrade-banner {
+      background: linear-gradient(90deg, #7c2d12, #9a3412, #b45309);
+      color: #fff7ed; text-align: center;
+      padding: 10px 12px; font-size: 0.82rem; font-weight: 600;
+      border-bottom: 1px solid #c2410c;
+      cursor: pointer;
+    }
+    .upgrade-banner:active { opacity: 0.9; }
+    .upgrade-banner .ub-btn {
+      display: inline-block; margin-left: 8px;
+      background: #fbbf24; color: #78350f;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 800;
+    }
+    .tier-upgrade-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; align-items: center;
+      margin-top: 8px;
+    }
+    .btn-upgrade-sm {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 8px 12px; font-size: 0.8rem; font-weight: 800; cursor: pointer;
+    }
+    .upgrade-modal-backdrop {
+      position: fixed; inset: 0; z-index: 100000;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .upgrade-modal {
+      background: linear-gradient(160deg, #0f172a, #1e293b);
+      border: 2px solid #f59e0b; border-radius: 18px;
+      padding: 22px 18px; max-width: 380px; width: 100%;
+      color: #f8fafc; text-align: center;
+      box-shadow: 0 0 40px rgba(245,158,11,0.3);
+    }
+    .upgrade-modal h2 { margin: 0 0 10px; font-size: 1.15rem; }
+    .upgrade-modal p { color: #cbd5e1; font-size: 0.9rem; line-height: 1.45; margin: 0 0 12px; }
+    .upgrade-price-list {
+      text-align: left; background: rgba(0,0,0,0.35);
+      border-radius: 12px; padding: 12px; margin: 0 0 14px;
+      border: 1px solid #334155; font-size: 0.85rem;
+    }
+    .upgrade-price-list div {
+      display: flex; justify-content: space-between; gap: 8px;
+      padding: 6px 0; border-bottom: 1px solid #1e293b;
+    }
+    .upgrade-price-list div:last-child { border-bottom: none; }
+    .upgrade-modal .um-actions { display: flex; flex-direction: column; gap: 8px; }
+    .upgrade-modal .btn-up-primary {
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      color: #fff; border: none; border-radius: 12px;
+      padding: 12px; font-weight: 800; cursor: pointer;
+    }
+    .upgrade-modal .btn-up-secondary {
+      background: transparent; color: #94a3b8;
+      border: 1px solid #475569; border-radius: 12px;
+      padding: 10px; font-weight: 600; cursor: pointer;
+    }
+    .quota-banner {
+      background: #7f1d1d; color: #fecaca; text-align: center;
+      padding: 8px 12px; font-size: 0.8rem; font-weight: 600;
+      border-bottom: 1px solid #991b1b;
+    }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.8rem; }
+    .key-status { font-size: 0.8rem; margin-top: 6px; }
+    .key-status.saved { color: var(--success); }
+    .key-status.missing { color: var(--warning); }
+    .tier-badge {
+      display: inline-block; padding: 4px 10px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700; margin-left: 8px;
+    }
+    .tier-lite { background: #334155; color: #94a3b8; }
+    .tier-sultan { background: #1e40af; color: #93c5fd; }
+    .tier-raja { background: #854d0e; color: #fde047; }
+    .activation-box {
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    }
+    .preview-img {
+      max-width: 100%; max-height: 200px; border-radius: 10px; margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+    .hidden { display: none !important; }
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 0; margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 8px; border: none; background: transparent;
+      color: var(--muted); font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: var(--primary); border-bottom-color: var(--primary);
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .opt-input {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .opt-input span {
+      font-weight: 700; color: var(--primary); min-width: 24px;
+    }
+    .opt-input input { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="data:image/png;base64,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S9tCmampxw5k79w+89MnxvYPlsPx2NLutu75qbbmREsybmiCa6BxioTMD/31X6ZSkDnxfHN93X2PHkGgRCzSmqpb0JpYNr9l5dLm1pboZN5/8mj+/udnntw/mS877TFn8aK6yZz50/uO2L7LGJdSpdPODTdsWbt1zcx08fnth//2429++PH9/YPZ1d2pfSemx0bG33THxc88c7Riu4Dg+CpkiIqjGChAIiSNcekrQka1GckqzLRq6/CPBen9fg3mL0VxX+pfYlVGowB9GDR959hwZIQ6R2BAwMMmj0UMBipuifnN2jVverfM57b/+jfDaTldqgwO529/6003veqyH339/re89dxF3fX33b333779qBUypIRSSZ69ZfGH37HlB99+7OPfOWFLed66+ldctnTr+jbBxcnhzKGeyZ6h6ZGJmVyxpBDsonvuy865/Y5rUJYnj+wLidLRfmfPkTFfOZMz+fHpwvB0Ll2ohHW2vjv18nMWnLUsEY9qDz3Z9+vn8nETXnPz2p0n7f2HxiIhwQWODE8vXzpv5YY25Xq/eWDfxz/1BgL6yc926iZva7QefX5gQVvdtjMX3PPIwXDIqFQ8wZlA5ktQpDSGjFBJJgEBkSMPGonVciYC0CnugP8UQ/2fJuAa3clscxBr9DYQIDeCZhoHEFxoHEMmF4Lqokad4Z135WVLN5zx7J1fO9yXHpop9w0X9LD54b99NUf5m188u6Qj/POf7vjIJ+81LZ0zlD4gg6npcqH/hJOrXHF289Vb6/um4CePD/7wgePbD46PThak7+o8ANMzIYTj+m9/3zu6F4V1oU4+91R2YjhS1/jQMz2GCMqn3COVK9h9I4XnDk88vWdwfKbS3RZ9141Lli+KZ6cKTz197JdPjUnlahogItfYffc8Z9plPzfdO5R9+W2XdXU2/uq+p/tH8zFDhIzQ8/t6X3ntJiVx54GBRCxULrtRkzke+pIEZ74vGUNCVeV1oVONRURU8Du7xfiHBPyiMv7PwWSdmtquRQqncTBUUWgUZE1KKU3jQBQNGcx3lq1ecMF1Vx154EcHj44Op0tlqdZvXhky9KQ7PbR7Z8lVX//RvsFp/Oevvuv6a872XAdAJutit16+cJLq1p29bniabvuHo/9419GDfWlN5/Ewj4RQ15BVCVO44zid8zs3buj2ikOMyqVifmJoZt3SuuWL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" alt="GEMA Generasi Emas" class="logo-img" />
+      <div class="logo-sub">Generasi Emas</div>
+      <p>Generator Soal SD • SMP • SMA/SMK • TKA</p>
+      <div id="tierDisplay" style="margin-top:8px;"></div>
+    </header>
+
+    <div id="upgradeBanner" class="upgrade-banner hidden" onclick="openUpgradeModal('banner')"></div>
+
+    <!-- Aktivasi Tier -->
+    <div class="card" id="activationCard">
+      <div class="card-title">Aktivasi Tier</div>
+      <div class="activation-box">
+        <label for="activationCode">Kode Aktivasi</label>
+        <input type="text" id="activationCode" placeholder="Contoh: RAJA-XXXX" style="margin-bottom:10px;" />
+        <button class="btn btn-primary" onclick="activateCode()">Aktifkan Kode</button>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:10px;">
+          Lite (20rb) • Sultan (200rb) • Raja Pro (1,5jt)<br>
+          Hubungi admin untuk mendapatkan kode.
+        </p>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-title">Pengaturan</div>
+
+      <div style="margin-bottom:14px;">
+        <label for="apiKey">Groq API Key</label>
+        <input type="password" id="apiKey" placeholder="gsk_..." autocomplete="off" />
+        <div id="keyStatus" class="key-status missing">Belum ada API Key tersimpan</div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('ai')" id="tabBtnAi">🤖 Generate AI</button>
+        <button class="tab-btn" onclick="switchTab('manual')" id="tabBtnManual">✍️ Tulis Manual</button>
+      </div>
+
+      <!-- ========== TAB 1: Generate AI ========== -->
+      <div id="tabAi" class="tab-content active">
+
+      <!-- Model -->
+      <div style="margin-bottom:14px;">
+        <label for="modelSelect">Model AI</label>
+        <select id="modelSelect" onchange="toggleCustomModel()">
+          <option value="openai/gpt-oss-20b" selected>openai/gpt-oss-20b (Disarankan — jarang error simbol)</option>
+          <option value="openai/gpt-oss-120b">openai/gpt-oss-120b (Lebih pintar, sering LaTeX rumit)</option>
+          <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Sangat Cepat)</option>
+          <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+          <option value="qwen/qwen3.8-27b">qwen/qwen3.8-27b (Vision - Baca Gambar)</option>
+          <option value="custom">Custom Model...</option>
+        </select>
+        <input type="text" id="customModel" class="hidden" placeholder="Ketik nama model Groq..." style="margin-top:8px;" />
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="jenjang">Jenjang</label>
+          <select id="jenjang" onchange="updateKelasDanMapel()">
+            <option value="SD">SD</option>
+            <option value="SMP">SMP</option>
+            <option value="SMA/SMK" selected>SMA/SMK</option>
+            <option value="TKA">TKA (Tes Kemampuan Akademik)</option>
+          </select>
+        </div>
+        <div>
+          <label for="kelas">Kelas</label>
+          <select id="kelas"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="mapel">Mata Pelajaran</label>
+          <select id="mapel"></select>
+        </div>
+        <div>
+          <label for="level">Level Soal</label>
+          <select id="level">
+            <option value="Mudah">Mudah</option>
+            <option value="Sedang" selected>Sedang</option>
+            <option value="HOTS">HOTS / Sulit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="gayaBahasa">Gaya Bahasa</label>
+          <select id="gayaBahasa">
+            <option value="Formal">Formal</option>
+            <option value="Santai">Santai</option>
+            <option value="Tongkrongan">Tongkrongan</option>
+          </select>
+        </div>
+        <div>
+          <label for="jumlahSoal">Jumlah Soal</label>
+          <select id="jumlahSoal">
+            <option value="1">1 Soal</option>
+            <option value="5">5 Soal</option>
+            <option value="10">10 Soal</option>
+            <option value="20">20 Soal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Upload Gambar -->
+      <div style="margin-bottom:14px;">
+        <label>Upload Foto Soal (Opsional)</label>
+        <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)" style="padding:10px;" />
+        <img id="imagePreview" class="preview-img hidden" />
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:6px;">
+          Jika upload gambar, model otomatis ganti ke Vision.
+        </p>
+      </div>
+
+      <div style="margin-bottom:14px;" id="modeGuruBox" class="hidden">
+        <label>
+          <input type="checkbox" id="modeGuru" /> Mode Guru (Kunci Jawaban di halaman terpisah PDF)
+        </label>
+        <div style="margin-top:12px;">
+          <label for="customPdfHeader">Header PDF (khusus Raja Pro)</label>
+          <input type="text" id="customPdfHeader" placeholder="Kosong = tanpa header GEMA • Atau isi nama sekolah/pembeli" maxlength="80" />
+          <small style="color:var(--muted);display:block;margin-top:4px;">Contoh: Bank Soal SMA Negeri 1 • Milik Budi</small>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="generateBtn" onclick="generateSoal()">
+        <span id="btnText">🚀 Generate Soal</span>
+        <span id="btnSpinner" class="spinner" style="display:none;"></span>
+      </button>
+
+      <button class="btn btn-success hidden" id="exportPdfBtn" onclick="exportPDF()">
+        📄 Export PDF
+      </button>
+
+      <div id="logBox" class="log-box" style="display:none;"></div>
+      </div><!-- end tabAi -->
+
+      <!-- ========== TAB 2: Tulis Manual ========== -->
+      <div id="tabManual" class="tab-content">
+        <div style="margin-bottom:14px;">
+          <label for="manualSoal">Tulis Soal Disini</label>
+          <textarea id="manualSoal" rows="5" placeholder="Ketik soal pilihan ganda di sini..."></textarea>
+        </div>
+
+        <div class="opt-input">
+          <span>A.</span>
+          <input type="text" id="optA" placeholder="Opsi A" />
+        </div>
+        <div class="opt-input">
+          <span>B.</span>
+          <input type="text" id="optB" placeholder="Opsi B" />
+        </div>
+        <div class="opt-input">
+          <span>C.</span>
+          <input type="text" id="optC" placeholder="Opsi C" />
+        </div>
+        <div class="opt-input">
+          <span>D.</span>
+          <input type="text" id="optD" placeholder="Opsi D" />
+        </div>
+        <div class="opt-input">
+          <span>E.</span>
+          <input type="text" id="optE" placeholder="Opsi E (opsional, boleh kosong)" />
+        </div>
+
+        <button class="btn btn-primary" id="manualBtn" onclick="jawabManual()" style="margin-top:12px;">
+          <span id="manualBtnText">🧠 Minta AI Jawab & Bahas</span>
+          <span id="manualBtnSpinner" class="spinner" style="display:none;"></span>
+        </button>
+
+        <div id="manualLog" class="log-box" style="display:none;"></div>
+      </div><!-- end tabManual -->
+    </div>
+
+    <!-- ========== CONVERSATION — ngobrol dengan GEMA (latihan bahasa) ========== -->
+    <div class="conversation-box" id="conversationBox">
+      <div class="conversation-header">
+        <span class="conversation-title">🟢 CONVERSATION</span>
+        <span class="conversation-timer" id="convTimer">30s</span>
+      </div>
+      <p class="conversation-hint">Ngobrol dengan GEMA (maks. <strong>30 detik</strong>/sesi). Pilih bahasa dulu — MIC, jawaban AI, dan suara mengikuti pilihan. Dukungan tergantung HP/browser.</p>
+      <div class="conv-lang-row">
+        <label for="convLang">Bahasa percakapan</label>
+        <select id="convLang" onchange="onConvLangChange(event)">
+          <option value="id-ID">Indonesia (id-ID)</option>
+          <option value="en-US">English (en-US)</option>
+          <option value="ja-JP">日本語 Jepang (ja-JP)</option>
+          <option value="zh-CN">中文 Mandarin (zh-CN)</option>
+          <option value="ko-KR">한국어 Korea (ko-KR)</option>
+          <option value="ar-SA">العربية Arab (ar-SA)</option>
+          <option value="es-ES">Español (es-ES)</option>
+          <option value="fr-FR">Français (fr-FR)</option>
+          <option value="de-DE">Deutsch (de-DE)</option>
+          <option value="nl-NL">Nederlands (nl-NL)</option>
+        </select>
+        <span class="conv-lang-support" id="convLangSupport"></span>
+      </div>
+      <div class="conv-chat" id="convChat">
+        <div class="conv-bubble gema"><div class="who">GEMA</div>Halo! Pilih bahasa di atas, lalu ngobrol. GEMA akan jawab dalam bahasa yang kamu pilih.</div>
+      </div>
+      <div class="conv-input-row">
+        <textarea id="convInput" placeholder="Ketik atau tekan MIC lalu bicara..." rows="2"></textarea>
+      </div>
+      <div class="conversation-controls">
+        <button type="button" class="btn-conv btn-mic" id="btnMic" onclick="toggleMic()">🎤 MIC</button>
+        <button type="button" class="btn-conv btn-send" id="btnSendConv" onclick="sendConversation()">➤ KIRIM</button>
+        <button type="button" class="btn-conv btn-speak" id="btnSpeakLast" onclick="speakLastGema()">🔊 SUARA GEMA</button>
+        <button type="button" class="btn-conv btn-clear-conv" onclick="clearConversation()">🗑 RESET</button>
+      </div>
+      <div class="conversation-status" id="convStatus">Siap ngobrol — pastikan API Key Groq sudah diisi di atas</div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+      <div class="empty-state">
+        <p>Pilih pengaturan lalu klik <strong>Generate Soal</strong></p>
+        <p style="font-size:0.85rem;margin-top:8px;">Hasil akan hilang jika tidak di-Export PDF</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      GEMA Generasi Emas • Sistem Kode Aktivasi
+    </div>
+  </div>
+
+  <script>
+    // ===================== CONFIG =====================
+    const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const VISION_MODEL = "qwen/qwen3.8-27b";
+
+    // Kode DEMO hanya untuk localhost / testing.
+    // Production (Vercel): HANYA kode dari /admin + server KV yang diterima.
+    const ACTIVATION_CODES = {
+      "LITE-DEMO": "lite",
+      "SULTAN-DEMO": "sultan",
+      "RAJA-DEMO": "raja"
+    };
+
+    function isProductionHost() {
+      const h = (location.hostname || "").toLowerCase();
+      if (!h || h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return false;
+      // file:// atau preview lokal
+      if (location.protocol === "file:") return false;
+      return true;
+    }
+
+    function allowLocalDemoCodes() {
+      // Izinkan demo hanya di non-production
+      return !isProductionHost();
+    }
+
+    const TIER_LIMITS = {
+      // maxSoal = max per 1x generate | dailySoal / dailyChatMin = kuota harian
+      lite:   { maxSoal: 5,  dailySoal: 10,  dailyChatMin: 5,  label: "Lite",     watermark: "besar" },
+      sultan: { maxSoal: 10, dailySoal: 100, dailyChatMin: 30, label: "Sultan",   watermark: "kecil" },
+      raja:   { maxSoal: 20, dailySoal: 500, dailyChatMin: 90, label: "Raja Pro", watermark: "none" }
+    };
+
+    // Data jenjang
+    const DATA = {
+      "SD": {
+        kelas: ["1","2","3","4","5","6"],
+        mapel: ["Matematika","IPA","IPS","Bahasa Indonesia","Bahasa Inggris","PPKN"]
+      },
+      "SMP": {
+        kelas: ["7","8","9"],
+        mapel: ["Matematika","IPA","IPS","Bahasa Indonesia","Bahasa Inggris","PPKN"]
+      },
+      "SMA/SMK": {
+        kelas: ["10","11","12"],
+        mapel: ["Matematika","Fisika","Kimia","Biologi","Ekonomi","Geografi","Sejarah","Bahasa Indonesia","Bahasa Inggris"]
+      },
+      "TKA": {
+        kelas: ["6","9","12"],
+        mapel: ["Matematika","IPA","IPS","Bahasa Indonesia","Bahasa Inggris"]
+      }
+    };
+
+    let currentTier = null; // diisi di init() dari storeGet (tahan tutup tab)
+    let lastSoalList = [];
+    let lastMeta = {};
+    let uploadedImageBase64 = null;
+
+    // ===================== KUOTA HARIAN (client; nanti bisa diganti server) =====================
+    function wibDateStr() {
+      // YYYY-MM-DD di zona Asia/Jakarta
+      try {
+        return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      } catch (e) {
+        const d = new Date();
+        return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+      }
+    }
+
+    function loadQuotaUsage() {
+      const today = wibDateStr();
+      let raw = null;
+      try { raw = localStorage.getItem("gema_quota_usage"); } catch (e) {}
+      let data = null;
+      try { data = raw ? JSON.parse(raw) : null; } catch (e) { data = null; }
+      if (!data || data.date !== today) {
+        data = { date: today, soal: 0, chatSec: 0 };
+        saveQuotaUsage(data);
+      }
+      return data;
+    }
+
+    function saveQuotaUsage(data) {
+      try { localStorage.setItem("gema_quota_usage", JSON.stringify(data)); } catch (e) {}
+    }
+
+    function getQuotaStatus() {
+      if (!currentTier || !TIER_LIMITS[currentTier]) {
+        return { ok: false, reason: "no_tier", soalUsed: 0, soalMax: 0, chatUsedMin: 0, chatMaxMin: 0 };
+      }
+      const lim = TIER_LIMITS[currentTier];
+      const u = loadQuotaUsage();
+      const chatUsedMin = Math.floor((u.chatSec || 0) / 60);
+      const soalLeft = Math.max(0, lim.dailySoal - (u.soal || 0));
+      const chatLeftSec = Math.max(0, lim.dailyChatMin * 60 - (u.chatSec || 0));
+      const exhausted = (u.soal || 0) >= lim.dailySoal && chatLeftSec <= 0;
+      // View-only jika salah satu habis? User bilang kuota habis = tidak bisa generate BARU / ngobrol BARU.
+      // Generate diblok jika soal habis; chat diblok jika chat habis.
+      return {
+        ok: true,
+        tier: currentTier,
+        soalUsed: u.soal || 0,
+        soalMax: lim.dailySoal,
+        soalLeft: soalLeft,
+        chatUsedMin: chatUsedMin,
+        chatMaxMin: lim.dailyChatMin,
+        chatLeftSec: chatLeftSec,
+        soalExhausted: (u.soal || 0) >= lim.dailySoal,
+        chatExhausted: chatLeftSec <= 0,
+        bothExhausted: (u.soal || 0) >= lim.dailySoal && chatLeftSec <= 0
+      };
+    }
+
+    function isServerLicense() {
+      return storeGet("gema_license_mode") === "server" || storeGet("gema_status_aktif") === "true";
+    }
+
+    /** Terapkan snapshot kuota dari server ke localStorage (cache UI) */
+    function applyServerQuota(q) {
+      if (!q) return;
+      const u = loadQuotaUsage();
+      u.soal = q.soalUsed || 0;
+      u.chatSec = (q.chatUsedMin || 0) * 60 + (typeof q.chatLeftSec === "number"
+        ? Math.max(0, (q.chatMaxMin || 0) * 60 - q.chatLeftSec - (q.chatUsedMin || 0) * 60)
+        : 0);
+      // Lebih akurat: hitung chatSec dari used
+      if (typeof q.chatUsedMin === "number" && typeof q.chatLeftSec === "number" && typeof q.chatMaxMin === "number") {
+        u.chatSec = Math.max(0, q.chatMaxMin * 60 - q.chatLeftSec);
+      }
+      saveQuotaUsage(u);
+      updateQuotaBanner();
+    }
+
+    async function refreshQuotaFromServer() {
+      if (!isServerLicense()) return getQuotaStatus();
+      try {
+        const data = await serverCheckQuota();
+        if (data && data.ok && data.quota) {
+          applyServerQuota(data.quota);
+          if (data.tier) {
+            currentTier = data.tier;
+            localStorage.setItem("gema_tier", currentTier);
+          }
+        } else if (data && data.error && /device|tidak cocok|dinonaktifkan/i.test(data.error)) {
+          // Device mismatch — kunci fitur
+          return { ok: false, reason: "device", error: data.error };
+        }
+      } catch (e) {}
+      return getQuotaStatus();
+    }
+
+    async function addSoalUsage(n) {
+      const amount = n || 0;
+      if (isServerLicense()) {
+        const data = await serverUseQuota("soal", amount);
+        if (data && data.ok && data.quota) {
+          applyServerQuota(data.quota);
+          return getQuotaStatus();
+        }
+        if (data && !data.ok && !data.offline) {
+          // Server tolak (kuota/device) — jangan tambah lokal palsu
+          if (data.quota) applyServerQuota(data.quota);
+          return { ...getQuotaStatus(), serverDenied: true, error: data.error };
+        }
+        // offline: fallback lokal
+      }
+      const u = loadQuotaUsage();
+      u.soal = (u.soal || 0) + amount;
+      saveQuotaUsage(u);
+      return getQuotaStatus();
+    }
+
+    async function addChatUsageSec(sec) {
+      const amount = sec || 0;
+      if (isServerLicense()) {
+        const data = await serverUseQuota("chat", amount);
+        if (data && data.ok && data.quota) {
+          applyServerQuota(data.quota);
+          return getQuotaStatus();
+        }
+        if (data && !data.ok && !data.offline) {
+          if (data.quota) applyServerQuota(data.quota);
+          return { ...getQuotaStatus(), serverDenied: true, error: data.error };
+        }
+      }
+      const u = loadQuotaUsage();
+      u.chatSec = (u.chatSec || 0) + amount;
+      saveQuotaUsage(u);
+      return getQuotaStatus();
+    }
+
+    async function canGenerateSoal(n) {
+      if (!currentTier) return { allow: false, reason: "Aktivasi dulu" };
+      // Server dulu — sumber kebenaran
+      if (isServerLicense()) {
+        await refreshQuotaFromServer();
+        // Pre-check: coba potong 0? Lebih baik cek snapshot
+        const st = getQuotaStatus();
+        if (st.soalExhausted || st.soalLeft < n) {
+          return { allow: false, reason: "quota_soal", status: st };
+        }
+        return { allow: true, status: st };
+      }
+      const st = getQuotaStatus();
+      if (!st.ok) return { allow: false, reason: "Aktivasi dulu" };
+      if (st.soalExhausted || st.soalLeft < n) {
+        return { allow: false, reason: "quota_soal", status: st };
+      }
+      return { allow: true, status: st };
+    }
+
+    async function canStartChat() {
+      if (!currentTier) return { allow: false, reason: "Aktivasi dulu" };
+      if (isServerLicense()) {
+        await refreshQuotaFromServer();
+        const st = getQuotaStatus();
+        if (st.chatExhausted || st.chatLeftSec <= 0) {
+          return { allow: false, reason: "quota_chat", status: st };
+        }
+        return { allow: true, status: st };
+      }
+      const st = getQuotaStatus();
+      if (!st.ok) return { allow: false, reason: "Aktivasi dulu" };
+      if (st.chatExhausted || st.chatLeftSec <= 0) {
+        return { allow: false, reason: "quota_chat", status: st };
+      }
+      return { allow: true, status: st };
+    }
+
+    function showQuotaModal(kind) {
+      // kind: 'soal' | 'chat' | 'both'
+      const st = getQuotaStatus();
+      const tier = currentTier || "lite";
+      let old = document.getElementById("quotaModal");
+      if (old) old.remove();
+
+      const soalLine = "Soal: " + st.soalUsed + "/" + st.soalMax;
+      const chatLine = "Conversation: " + st.chatUsedMin + " menit / " + st.chatMaxMin + " menit";
+
+      let title = "🚨 KUOTA HABIS BOS!";
+      let msg = "";
+      let actions = "";
+
+      if (tier === "lite") {
+        title = "🚨 KUOTA HABIS BOS!";
+        msg = "10 soal aja mana cukup buat pinter?<br>Gas ke Sultan biar 100 soal + 30 menit!";
+        actions = `
+          <button type="button" class="btn-upgrade" onclick="quotaUpgradeHint('sultan')">UPGRADE KE SULTAN</button>
+          <button type="button" class="btn-wait" onclick="closeQuotaModal()">BALIK BESOK 00:00 WIB</button>`;
+      } else if (tier === "sultan") {
+        title = "🔥 KUOTA SULTAN HABIS!";
+        msg = "Buset, 100 soal / 30 menit habis juga? Kamu rajin banget!<br>Naik ke RAJA PRO biar 500 soal + 90 menit, puas!";
+        actions = `
+          <button type="button" class="btn-upgrade" onclick="quotaUpgradeHint('raja')">UPGRADE KE PRO - RAJA</button>
+          <button type="button" class="btn-wait" onclick="closeQuotaModal()">BALIK BESOK 00:00 WIB</button>`;
+      } else {
+        title = "👑 GILA! RAJA PRO HABIS JUGA!";
+        msg = "500 soal / 90 menit habis dalam sehari? Kamu bukan murid lagi, kamu mesin belajar!<br>Istirahat dulu Raja, besok jam 00:00 WIB gas lagi!";
+        actions = `
+          <button type="button" class="btn-wait" onclick="closeQuotaModal()">OKE, ISTIRAHAT DULU</button>`;
+      }
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "quota-modal-backdrop";
+      backdrop.id = "quotaModal";
+      // Tidak close saat klik luar — hanya lewat tombol
+      backdrop.innerHTML = `
+        <div class="quota-modal" onclick="event.stopPropagation()">
+          <h2>${title}</h2>
+          <div class="quota-stats">${soalLine}<br>${chatLine}</div>
+          <p class="quota-msg">${msg}</p>
+          <div class="quota-actions">${actions}</div>
+          <p style="font-size:0.75rem;color:#64748b;margin:14px 0 0;">Mode lihat saja — kamu masih bisa buka menu & lihat hasil yang sudah ada.</p>
+        </div>`;
+      document.body.appendChild(backdrop);
+      updateQuotaBanner();
+    }
+
+    function closeQuotaModal() {
+      const m = document.getElementById("quotaModal");
+      if (m) m.remove();
+    }
+
+    function quotaUpgradeHint(target) {
+      closeQuotaModal();
+      alert("Hubungi penjual GEMA untuk upgrade ke " + (target === "raja" ? "Raja Pro" : "Sultan") + ".\n\nSetelah dapat kode baru, aktivasi ulang di halaman utama.");
+    }
+
+    function updateQuotaBanner() {
+      let bar = document.getElementById("quotaBanner");
+      if (!currentTier) {
+        if (bar) bar.remove();
+        return;
+      }
+      const st = getQuotaStatus();
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "quotaBanner";
+        bar.className = "quota-banner";
+        const app = document.querySelector(".app") || document.body;
+        app.insertBefore(bar, app.firstChild);
+      }
+      // Format jelas: terpakai / maksimal (menit conversation)
+      bar.textContent = "Kuota hari ini · Soal " + st.soalUsed + "/" + st.soalMax +
+        " · Conversation " + st.chatUsedMin + " menit / " + st.chatMaxMin + " menit · Reset 00:00 WIB";
+      if (st.soalExhausted && st.chatExhausted) {
+        bar.style.background = "#7f1d1d";
+        bar.textContent += " · MODE LIHAT SAJA";
+      } else if (st.soalExhausted || st.chatExhausted) {
+        bar.style.background = "#9a3412";
+      } else {
+        bar.style.background = "#14532d";
+      }
+    }
+
+    // ===================== INIT =====================
+    function saveActiveSession(code, tier) {
+      storeSet("gema_status_aktif", "true");
+      storeSet("gema_activation_code", (code || "").toUpperCase());
+      storeSet("gema_tier", tier || "");
+      storeSet("gema_license_mode", "server");
+      getDeviceId(); // pastikan device_id sudah ada (tidak dibuat ulang jika sudah ada)
+    }
+
+    function clearActiveSession() {
+      // Hapus sesi UI saja — device_id TETAP (kode di server tetap terikat HP/browser ini)
+      storeDel("gema_status_aktif");
+      storeDel("gema_activation_code");
+      storeDel("gema_tier");
+      storeDel("gema_license_mode");
+      currentTier = null;
+    }
+
+    function isSessionAktif() {
+      return storeGet("gema_status_aktif") === "true" && !!storeGet("gema_activation_code");
+    }
+
+    function updateActivationCardUI() {
+      const card = document.getElementById("activationCard");
+      if (!card) return;
+      const code = getActivationCode();
+      const aktif = isSessionAktif() && currentTier;
+      if (aktif) {
+        card.innerHTML = `
+          <div class="card-title">Status Aktivasi</div>
+          <div class="activation-box">
+            <p style="margin:0 0 8px;color:var(--ok,#22c55e);font-weight:700;">✅ Aktif — Tier ${(TIER_LIMITS[currentTier]||{}).label || currentTier}</p>
+            <p style="margin:0 0 8px;font-size:0.85rem;color:var(--muted);">Kode: <code>${code}</code></p>
+            <p style="margin:0 0 12px;font-size:0.8rem;color:var(--muted);">Sudah aktivasi. Kode berlaku selamanya — hapus data / ganti HP tinggal masukkan kode yang sama.</p>
+            <button type="button" class="btn btn-secondary" style="width:100%;" onclick="if(confirm('Keluar dari sesi di browser ini? Kode tetap bisa dipakai lagi kapan saja (password selamanya).')){clearActiveSession();location.reload();}">Ganti / Keluar Sesi</button>
+          </div>`;
+      }
+      // jika belum aktif, biarkan HTML asli (hanya di first paint). Setelah clear+reload form kembali.
+    }
+
+    async function restoreSessionOnLoad() {
+      // Ambil dari localStorage dulu supaya UI tidak "kosong" saat refresh
+      let code = "";
+      let tier = null;
+      let status = false;
+      status = storeGet("gema_status_aktif") === "true";
+      code = (storeGet("gema_activation_code") || "").toUpperCase();
+      tier = storeGet("gema_tier") || null;
+
+      if (status && code && tier && TIER_LIMITS[tier]) {
+        currentTier = tier;
+        // perkuat tulis ulang (tahan tutup tab)
+        saveActiveSession(code, tier);
+        updateTierUI();
+        updateActivationCardUI();
+      } else if (code && tier && TIER_LIMITS[tier]) {
+        // kompatibilitas sesi lama
+        currentTier = tier;
+        saveActiveSession(code, tier);
+        updateTierUI();
+        updateActivationCardUI();
+        status = true;
+      }
+
+      // Validasi ulang ke server dengan device yang SAMA (bukan tandai terpakai)
+      if (status && code) {
+        const deviceId = getDeviceId();
+        try {
+          const data = await serverActivate(code, deviceId);
+          if (data && data.ok) {
+            currentTier = data.tier || currentTier;
+            saveActiveSession(code, currentTier);
+            updateTierUI();
+            updateActivationCardUI();
+            if (data.quota) applyServerQuota(data.quota);
+            return;
+          }
+          // Device beda / kode nonaktif — jangan langsung hapus sesi lokal kecuali error jelas
+          if (data && data.error && /dinonaktifkan|tidak valid/i.test(data.error)) {
+            console.warn("restore session:", data.error);
+          }
+        } catch (e) {
+          // offline: tetap pakai sesi lokal
+        }
+      }
+    }
+
+    function init() {
+      // pastikan device id stabil sejak awal
+      getDeviceId();
+      updateKelasDanMapel();
+      loadApiKey();
+      // restore tier dari localStorage segera (anti "balik ke 0")
+      const t0 = storeGet("gema_tier");
+      if (t0 && TIER_LIMITS[t0]) currentTier = t0;
+      updateTierUI();
+      restrictJumlahSoal();
+      loadQuotaUsage();
+      updateQuotaBanner();
+      updateActivationCardUI();
+      restoreSessionOnLoad().then(() => {
+        updateTierUI();
+        updateActivationCardUI();
+        updateQuotaBanner();
+      }).catch(() => {});
+    }
+
+    function updateKelasDanMapel() {
+      const jenjang = document.getElementById("jenjang").value;
+      const kelasSelect = document.getElementById("kelas");
+      const mapelSelect = document.getElementById("mapel");
+      kelasSelect.innerHTML = "";
+      DATA[jenjang].kelas.forEach(k => {
+        const opt = document.createElement("option");
+        opt.value = k; opt.textContent = "Kelas " + k;
+        kelasSelect.appendChild(opt);
+      });
+      mapelSelect.innerHTML = "";
+      DATA[jenjang].mapel.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m; opt.textContent = m;
+        mapelSelect.appendChild(opt);
+      });
+    }
+
+    function toggleCustomModel() {
+      const sel = document.getElementById("modelSelect").value;
+      document.getElementById("customModel").classList.toggle("hidden", sel !== "custom");
+    }
+
+    function loadApiKey() {
+      const key = localStorage.getItem("gema_sekolah_groq_key") || localStorage.getItem("gema_groq_key");
+      if (key) {
+        document.getElementById("apiKey").value = key;
+        document.getElementById("keyStatus").textContent = "✅ API Key tersimpan";
+        document.getElementById("keyStatus").className = "key-status saved";
+      }
+      document.getElementById("apiKey").addEventListener("input", e => {
+        const val = e.target.value.trim();
+        if (val.startsWith("gsk_")) {
+          localStorage.setItem("gema_sekolah_groq_key", val);
+          document.getElementById("keyStatus").textContent = "✅ API Key tersimpan";
+          document.getElementById("keyStatus").className = "key-status saved";
+        }
+      });
+    }
+
+    // Harga jual (edit di sini) — upgrade = bayar selisih
+    const TIER_PRICES = {
+      lite: 20000,
+      sultan: 200000,
+      raja: 1500000
+    };
+    // Kontak upgrade MANUAL — nomor WA admin cukup di Lynk.id / bio, tidak ditanam di app
+
+    function formatRp(n) {
+      return "Rp" + Number(n).toLocaleString("id-ID");
+    }
+
+    function upgradeDiff(fromTier, toTier) {
+      const a = TIER_PRICES[fromTier] || 0;
+      const b = TIER_PRICES[toTier] || 0;
+      return Math.max(0, b - a);
+    }
+
+    function updateUpgradeBanner() {
+      const bar = document.getElementById("upgradeBanner");
+      if (!bar) return;
+      if (!currentTier || currentTier === "raja") {
+        bar.classList.add("hidden");
+        bar.innerHTML = "";
+        return;
+      }
+      bar.classList.remove("hidden");
+      if (currentTier === "lite") {
+        bar.innerHTML = 'Kamu masih <strong>LITE</strong> — upgrade buka 10 bahasa & kuota lebih besar! <span class="ub-btn">UPGRADE</span>';
+      } else {
+        bar.innerHTML = 'Kamu <strong>SULTAN</strong> — naik ke <strong>RAJA PRO</strong> untuk 10 bahasa + kuota 500 soal! <span class="ub-btn">UPGRADE PRO</span>';
+      }
+    }
+
+    function openUpgradeModal(reason) {
+      const old = document.getElementById("upgradeModal");
+      if (old) old.remove();
+      const tier = currentTier || "lite";
+      let title = "👑 UPGRADE TIER GEMA";
+      let intro = "Pilih paket lebih tinggi. Bayar <strong>selisih harga</strong>, kirim bukti ke admin, lalu dapat <strong>kode aktivasi baru</strong>.";
+      if (reason === "locked") {
+        title = "🔒 FITUR KHUSUS RAJA PRO!";
+        intro = "Bahasa & suara premium terkunci di tier kamu. Mau upgrade sekarang biar kebuka semua?";
+      }
+
+      const rows = [];
+      // LITE / belum aktivasi → 2 pilihan (Sultan + Raja Pro)
+      // SULTAN → 1 pilihan saja (Raja Pro), JANGAN tampilkan Sultan lagi
+      // RAJA PRO → tidak ada tombol upgrade
+      if (tier === "raja") {
+        title = "👑 KAMU SUDAH RAJA PRO";
+        intro = "<strong>JADI RAJA PRO 👑 — SUDAH MAX.</strong><br>Semua fitur terbuka: 10 bahasa, suara natural, kuota 500 soal + 90 menit chat.";
+      } else if (tier === "sultan") {
+        if (reason === "locked") {
+          title = "🔒 FITUR KHUSUS RAJA PRO!";
+          intro = "Bahasa & suara premium khusus Raja Pro. Bayar <strong>selisih</strong> Sultan → Raja Pro saja.";
+        } else {
+          intro = "Kamu sudah <strong>Sultan</strong>. Satu langkah lagi ke puncak — bayar <strong>selisih</strong> ke Raja Pro saja.";
+        }
+        rows.push({
+          to: "raja",
+          label: "Raja Pro",
+          price: upgradeDiff("sultan", "raja"),
+          desc: "Selisih Sultan → Raja Pro · 500 soal + 90 mnt + 10 bahasa"
+        });
+      } else {
+        // lite atau belum aktivasi
+        rows.push({
+          to: "sultan",
+          label: "Sultan",
+          price: upgradeDiff("lite", "sultan"),
+          desc: "Selisih Lite → Sultan · 100 soal + 30 mnt chat"
+        });
+        rows.push({
+          to: "raja",
+          label: "Raja Pro",
+          price: upgradeDiff("lite", "raja"),
+          desc: "Selisih Lite → Raja Pro · 500 soal + 90 mnt + 10 bahasa"
+        });
+      }
+
+      const priceHtml = rows.length
+        ? `<div class="upgrade-price-list">${rows.map(r =>
+            `<div><span><strong>${r.label}</strong><br><small style="color:#94a3b8">${r.desc}</small></span><span style="color:#fbbf24;font-weight:800">${formatRp(r.price)}</span></div>`
+          ).join("")}</div>`
+        : "";
+
+      const actions = rows.length
+        ? rows.map(r =>
+            `<button type="button" class="btn-up-primary" onclick="contactUpgrade('${r.to}')">UPGRADE KE ${r.label.toUpperCase()} — ${formatRp(r.price)}</button>`
+          ).join("") +
+          `<button type="button" class="btn-up-secondary" onclick="closeUpgradeModal()">Nanti saja</button>`
+        : `<button type="button" class="btn-up-secondary" onclick="closeUpgradeModal()">Tutup</button>`;
+
+      const bd = document.createElement("div");
+      bd.className = "upgrade-modal-backdrop";
+      bd.id = "upgradeModal";
+      bd.innerHTML = `<div class="upgrade-modal" onclick="event.stopPropagation()">
+        <h2>${title}</h2>
+        <p>${intro}</p>
+        ${priceHtml}
+        <p style="font-size:0.78rem;color:#64748b">Bayar selisih → hubungi admin (kontak di Lynk.id) → dapat kode baru → tempel di Aktivasi Tier.</p>
+        <div class="um-actions">${actions}</div>
+      </div>`;
+      document.body.appendChild(bd);
+    }
+
+    function closeUpgradeModal() {
+      const m = document.getElementById("upgradeModal");
+      if (m) m.remove();
+    }
+
+    function contactUpgrade(toTier) {
+      const from = currentTier || "lite";
+      const order = { lite: 1, sultan: 2, raja: 3 };
+      if ((order[toTier] || 0) <= (order[from] || 0)) {
+        alert("Kamu sudah di tier ini atau lebih tinggi.");
+        return;
+      }
+      const diff = upgradeDiff(from, toTier);
+      const label = (TIER_LIMITS[toTier] || {}).label || toTier;
+      const fromLabel = (TIER_LIMITS[from] || {}).label || from;
+      const kode = (typeof getActivationCode === "function" ? getActivationCode() : "") || "-";
+      closeUpgradeModal();
+      alert(
+        "UPGRADE ke " + label + "\n\n" +
+        "Tier sekarang: " + fromLabel + "\n" +
+        "Selisih bayar: " + formatRp(diff) + "\n" +
+        "Kode lama: " + kode + "\n\n" +
+        "Cara:\n" +
+        "1. Hubungi admin (nomor ada di halaman Lynk.id / tempat kamu beli)\n" +
+        "2. Kirim bukti transfer selisih\n" +
+        "3. Admin kirim KODE AKTIVASI BARU\n" +
+        "4. Tempel kode baru di menu Aktivasi Tier"
+      );
+    }
+
+
+    function updateTierUI() {
+      const display = document.getElementById("tierDisplay");
+      const modeGuruBox = document.getElementById("modeGuruBox");
+      if (!currentTier) {
+        display.innerHTML = `<span class="tier-badge tier-lite">Belum Aktivasi</span>
+          <div class="tier-upgrade-row"><button type="button" class="btn-upgrade-sm" onclick="openUpgradeModal('header')">UPGRADE TIER 👑</button></div>`;
+        modeGuruBox.classList.add("hidden");
+      } else {
+        const info = TIER_LIMITS[currentTier];
+        let cls = currentTier === "raja" ? "tier-raja" : currentTier === "sultan" ? "tier-sultan" : "tier-lite";
+        let upBtn = "";
+        if (currentTier === "raja") {
+          upBtn = `<div class="tier-upgrade-row" style="font-size:0.8rem;color:#fbbf24;font-weight:700;margin-top:6px;">JADI RAJA PRO 👑 SUDAH MAX</div>`;
+        } else if (currentTier === "sultan") {
+          upBtn = `<div class="tier-upgrade-row"><button type="button" class="btn-upgrade-sm" onclick="openUpgradeModal('header')">UPGRADE KE RAJA PRO 👑</button></div>`;
+        } else {
+          upBtn = `<div class="tier-upgrade-row"><button type="button" class="btn-upgrade-sm" onclick="openUpgradeModal('header')">UPGRADE KE SULTAN / RAJA PRO 👑</button></div>`;
+        }
+        display.innerHTML = `<span class="tier-badge ${cls}">TIER: ${info.label}</span>${upBtn}`;
+        if (currentTier === "raja") modeGuruBox.classList.remove("hidden");
+        else modeGuruBox.classList.add("hidden");
+      }
+      updateUpgradeBanner();
+      restrictJumlahSoal();
+      updateQuotaBanner();
+      if (typeof applyConvTierLimits === "function") applyConvTierLimits();
+      const hdr = document.getElementById("customPdfHeader");
+      if (hdr && !hdr._gemaBound) {
+        hdr.value = localStorage.getItem("gema_pdf_header") || "";
+        hdr.addEventListener("input", () => {
+          localStorage.setItem("gema_pdf_header", hdr.value.trim());
+        });
+        hdr._gemaBound = true;
+      }
+    }
+
+    function restrictJumlahSoal() {
+      const select = document.getElementById("jumlahSoal");
+      const max = currentTier ? TIER_LIMITS[currentTier].maxSoal : 5;
+      Array.from(select.options).forEach(opt => {
+        const val = parseInt(opt.value);
+        opt.disabled = val > max;
+        if (opt.disabled && select.value == opt.value) select.value = max >= 5 ? "5" : "1";
+      });
+    }
+
+    // ===================== AKTIVASI + SERVER =====================
+    // ==== localStorage PERMANEN (bukan sessionStorage) ====
+    // device_id dibuat 1x saja; refresh / tutup tab / buka Chrome lagi = ID yang sama
+    function storeGet(key) {
+      try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
+    }
+    function storeSet(key, value) {
+      try { localStorage.setItem(key, value == null ? "" : String(value)); } catch (e) {}
+    }
+    function storeDel(key) {
+      try { localStorage.removeItem(key); } catch (e) {}
+    }
+
+    function getDeviceId() {
+      // WAJIB: kalau sudah ada di localStorage, JANGAN buat baru
+      let id = "";
+      try { id = localStorage.getItem("gema_device_id") || ""; } catch (e) { id = ""; }
+      if (id && String(id).length > 8) {
+        return String(id);
+      }
+      // Hanya pertama kali buka (belum pernah ada)
+      id = "dev_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      try {
+        localStorage.setItem("gema_device_id", id);
+      } catch (e) {}
+      return id;
+    }
+
+    function getActivationCode() {
+      try { return (localStorage.getItem("gema_activation_code") || "").toUpperCase(); } catch (e) { return ""; }
+    }
+
+    async function serverActivate(code, deviceId) {
+      const res = await fetch("/api/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, deviceId })
+      });
+      return res.json();
+    }
+
+    async function serverUseQuota(type, amount) {
+      const code = getActivationCode();
+      const deviceId = getDeviceId();
+      if (!code) return { ok: false, error: "Belum aktivasi" };
+      try {
+        const res = await fetch("/api/quota", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, deviceId, type, amount })
+        });
+        return res.json();
+      } catch (e) {
+        return { ok: false, error: "Server tidak terjangkau", offline: true };
+      }
+    }
+
+    async function activateCode() {
+      const code = document.getElementById("activationCode").value.trim().toUpperCase();
+      if (!code) return alert("Masukkan kode aktivasi");
+      const deviceId = getDeviceId();
+
+      // 1) Coba server (produksi + KV)
+      try {
+        const data = await serverActivate(code, deviceId);
+        if (data && data.ok) {
+          currentTier = data.tier;
+          saveActiveSession(code, currentTier);
+          if (data.quota) applyServerQuota(data.quota);
+          updateTierUI();
+          updateActivationCardUI();
+          updateQuotaBanner();
+          alert("✅ Aktivasi berhasil! Tier: " + ((TIER_LIMITS[currentTier] || {}).label || currentTier) + "\n\nKode ini berlaku SELAMANYA (seperti password). Bisa login lagi di HP manapun.");
+          return;
+        }
+        if (data && data.error) {
+          const softFail = /KV|token|database|Server error/i.test(String(data.error + " " + (data.hint || "")));
+          if (!softFail) {
+            alert("❌ " + data.error);
+            return;
+          }
+        }
+      } catch (e) { /* fallback lokal */ }
+
+      // 2) Fallback demo lokal — HANYA non-production (localhost)
+      if (allowLocalDemoCodes() && ACTIVATION_CODES[code]) {
+        currentTier = ACTIVATION_CODES[code];
+        storeSet("gema_status_aktif", "true");
+        storeSet("gema_tier", currentTier);
+        storeSet("gema_activation_code", code);
+        storeSet("gema_license_mode", "local");
+        getDeviceId();
+        updateTierUI();
+        updateActivationCardUI();
+        alert("✅ Aktivasi lokal (demo)! Tier: " + TIER_LIMITS[currentTier].label + "\n\nIni hanya untuk testing di localhost.");
+      } else if (!allowLocalDemoCodes()) {
+        alert("❌ Kode tidak valid atau server belum merespons.\n\nProduction hanya menerima kode dari /admin.\nKode demo (LITE-DEMO dll) sudah dimatikan di production.");
+      } else {
+        alert("❌ Kode tidak valid. Di localhost bisa pakai LITE-DEMO / SULTAN-DEMO / RAJA-DEMO");
+      }
+    }
+
+    // ===================== IMAGE =====================
+    function previewImage(e) {
+      const file = e.target.files[0];
+      if (!file) {
+        uploadedImageBase64 = null;
+        document.getElementById("imagePreview").classList.add("hidden");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        uploadedImageBase64 = ev.target.result;
+        const img = document.getElementById("imagePreview");
+        img.src = uploadedImageBase64;
+        img.classList.remove("hidden");
+        // Auto switch to vision model
+        document.getElementById("modelSelect").value = VISION_MODEL;
+        toggleCustomModel();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ===================== LOGGING =====================
+    function log(msg, type="info") {
+      const box = document.getElementById("logBox");
+      box.style.display = "block";
+      const time = new Date().toLocaleTimeString("id-ID");
+      const cls = type === "ok" ? "ok" : type === "err" ? "err" : "info";
+      box.innerHTML += `<span class="${cls}">[${time}] ${msg}</span>\n`;
+      box.scrollTop = box.scrollHeight;
+    }
+    function clearLog() {
+      document.getElementById("logBox").innerHTML = "";
+      document.getElementById("logBox").style.display = "none";
+    }
+
+    // ===================== PROMPT (Prioritas 1–4) =====================
+    const SYSTEM_GEMA = `Kamu asisten pembuat soal ujian sekolah Indonesia.
+ATURAN MUTLAK:
+1. Output HANYA JSON array valid. Tanpa markdown, tanpa teks di luar JSON.
+2. Bahasa Indonesia saja. Dilarang campur bahasa Inggris kecuali istilah ilmiah wajib (DNA, HTML, pH).
+3. Rumus: boleh LaTeX sederhana dibungkus \\( ... \\) untuk pecahan/akar, contoh \\( \\frac{1}{2} \\), \\( \\sqrt{x} \\), \\( x^{2} \\).
+   Dilarang: \\begin{pmatrix}, \\begin{aligned}, \\left, \\right tanpa pasangan.
+4. Boleh juga unicode: ² ³ √ π ∫ ≠ ≤ ≥. Matriks bentuk teks [ a b ].
+5. Untuk grafik/bangun: isi field "grafik" (objek). Contoh:
+   {"tipe":"fungsi","rumus":"x^2","xmin":-3,"xmax":3,"judul":"y = x²"}
+   {"tipe":"lingkaran","r":2,"judul":"Lingkaran r=2"}
+   {"tipe":"titik","titik":[[0,0],[1,2],[2,1]],"judul":"Titik-titik"}
+   Jika tidak perlu grafik, grafik: null.
+6. Pembahasan 2-4 kalimat, sampai jawaban akhir, jangan putus di tengah.
+7. KUNCI JAWABAN KETAT:
+   - "kunci" HARUS tepat satu huruf A/B/C/D/E
+   - Isi opsi pada huruf kunci HARUS benar secara konsep
+   - Dilarang kunci yang tidak cocok dengan pembahasan
+   - Sebelum output, cek ulang: opsi[kunci] = jawaban yang benar
+8. KURIKULUM KETAT:
+   - Soal HANYA materi ${"jenjang/kelas/mapel yang diminta user"}
+   - Dilarang materi kelas di atasnya (contoh: Kelas 10 jangan pakai materi Kelas 12)
+   - Dilarang materi mapel lain
+   - Sesuai Kurikulum Merdeka / K13 Indonesia`;
+
+    function buildPrompt(jenjang, kelas, mapel, level, jumlah, gaya) {
+      let gayaText = {
+        "Formal": "Bahasa Indonesia formal dan baku.",
+        "Santai": "Bahasa santai namun tetap sopan dan mudah dipahami siswa.",
+        "Tongkrongan": "Bahasa gaul/tongkrongan anak muda, tetap jelas dan tidak kasar."
+      }[gaya] || "Bahasa formal.";
+
+      return `Buatkan tepat ${jumlah} soal pilihan ganda untuk:
+Jenjang: ${jenjang}
+Kelas: ${kelas}
+Mapel: ${mapel}
+Level: ${level}
+Gaya bahasa: ${gayaText}
+
+KURIKULUM (WAJIB TAAT):
+- Materi HANYA untuk ${jenjang} Kelas ${kelas} — mapel ${mapel}
+- Kurikulum Merdeka / K13 Indonesia
+- DILARANG materi kelas lebih tinggi atau mapel lain
+- Cocok untuk UH, PTS, PAS, Ujian Sekolah / TKA
+
+KUNCI & OPSI (WAJIB TAAT):
+- Setiap soal: 5 opsi A B C D E, semua terisi, homogen
+- Tepat 1 jawaban benar
+- Field "kunci" = huruf opsi yang BENAR (bukan sembarang)
+- Setelah menulis opsi, PILIH kunci yang isinya benar, lalu tulis pembahasan yang mendukung kunci itu
+- Jika ragu hitungan, sederhanakan soal agar kunci pasti benar
+
+FORMAT:
+- Tanpa LaTeX rumit; unicode (² √ π) dan matriks teks
+- Pembahasan singkat sampai jawaban akhir
+
+Jawab HANYA JSON array:
+[
+  {
+    "nomor": 1,
+    "tipe": "pg",
+    "soal": "... boleh pakai \\\\( \\\\frac{a}{b} \\\\) atau \\\\( \\\\sqrt{x} \\\\) ...",
+    "pilihan": { "A": "...", "B": "...", "C": "...", "D": "...", "E": "..." },
+    "kunci": "A",
+    "pembahasan": "...",
+    "grafik": null
+  }
+]
+Jika soal butuh grafik, isi "grafik" seperti {"tipe":"fungsi","rumus":"x^2","xmin":-3,"xmax":3,"judul":"y=x²"}.`;
+    }
+
+    // Deteksi PG vs Isian
+    function isPilihanGanda(item) {
+      const tipe = (item.tipe || item.mode || item.jenis || "").toString().toLowerCase();
+      if (tipe === "isian" || tipe === "essay" || tipe === "uraian" || tipe === "short_answer") return false;
+      if (tipe === "pg" || tipe === "pilihan_ganda" || tipe === "multiple_choice") return true;
+      const p = item.pilihan || item.options || {};
+      let filled = 0;
+      ["A","B","C","D","E"].forEach(L => {
+        const v = (p[L] || p[L.toLowerCase()] || "").toString().trim();
+        if (v && v !== "-" && v.length > 0) filled++;
+      });
+      // Minimal 2 opsi terisi = dianggap PG
+      return filled >= 2;
+    }
+
+    // Fisher-Yates shuffle (acak opsi di kode, BUKAN mengandalkan AI)
+    function fisherYatesShuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = a[i];
+        a[i] = a[j];
+        a[j] = tmp;
+      }
+      return a;
+    }
+
+    // Acak posisi opsi A-E, kunci mengikuti teks jawaban benar
+    function shufflePilihanPG(pilihanObj, kunciLama) {
+      const labels = ["A", "B", "C", "D", "E"];
+      const texts = labels.map(L => {
+        const v = (pilihanObj[L] || pilihanObj[L.toLowerCase()] || "").toString().trim();
+        return v && v !== "-" ? v : "";
+      });
+      // Ambil teks jawaban benar sebelum diacak
+      let correctText = "";
+      const k0 = (kunciLama || "").toString().toUpperCase().replace(/[^A-E]/g, "").charAt(0);
+      if (k0 && texts[labels.indexOf(k0)]) {
+        correctText = texts[labels.indexOf(k0)];
+      } else {
+        // fallback: opsi pertama yang terisi
+        correctText = texts.find(t => t) || "";
+      }
+      // Hanya acak opsi yang terisi (minimal 2)
+      const filled = texts.filter(t => t);
+      if (filled.length < 2) {
+        const out = {};
+        labels.forEach((L, i) => { if (texts[i]) out[L] = texts[i]; });
+        return { pilihan: out, kunci: k0 || "A" };
+      }
+      const shuffled = fisherYatesShuffle(filled);
+      const pilihanBaru = {};
+      const usedLabels = labels.slice(0, shuffled.length);
+      usedLabels.forEach((L, i) => {
+        // Jangan simpleSuperscript di sini — biarkan KaTeX render \frac di opsi
+        const txt = shuffled[i];
+        pilihanBaru[L] = hasLatexCmd(txt) ? txt : simpleSuperscript(txt);
+      });
+      // Kunci = label yang teksnya sama dengan jawaban benar (teks asli, sebelum acak)
+      let kunciBaru = "";
+      const norm = (t) => String(t || "").replace(/\s+/g, "").trim();
+      usedLabels.forEach(L => {
+        if (kunciBaru) return;
+        if (norm(pilihanBaru[L]) === norm(correctText)) kunciBaru = L;
+      });
+      if (!kunciBaru) kunciBaru = usedLabels[0];
+      return { pilihan: pilihanBaru, kunci: kunciBaru };
+    }
+
+    // Validasi kunci (hanya PG) + Fisher-Yates + pembahasan + jawaban_akhir (isian)
+    function sanitizeSoalList(list) {
+      if (!Array.isArray(list)) return [];
+      return list.map((item, idx) => {
+        const pilihan = item.pilihan || item.options || {};
+        const pg = isPilihanGanda(item);
+        let kunci = "";
+        let jawabanAkhir = "";
+        let pilihanClean = {};
+
+        if (pg) {
+          let kunciRaw = (item.kunci || "").toString().toUpperCase().replace(/[^A-E]/g, "").charAt(0);
+          if (!["A","B","C","D","E"].includes(kunciRaw)) {
+            kunciRaw = ["A","B","C","D","E"].find(L => {
+              const v = (pilihan[L] || pilihan[L.toLowerCase()] || "").toString().trim();
+              return v && v !== "-";
+            }) || "";
+          }
+          // Kumpulkan opsi mentah dulu
+          const mentah = {};
+          ["A","B","C","D","E"].forEach(L => {
+            const v = (pilihan[L] || pilihan[L.toLowerCase()] || "").toString().trim();
+            if (v && v !== "-") mentah[L] = v;
+          });
+          // Fisher-Yates: acak posisi, kunci ikut teks benar
+          const shuffled = shufflePilihanPG(mentah, kunciRaw);
+          pilihanClean = shuffled.pilihan;
+          kunci = shuffled.kunci;
+        } else {
+          // Mode ISIAN — jangan default Kunci A
+          kunci = "";
+          jawabanAkhir = (
+            item.jawaban_akhir || item.jawabanAkhir || item.jawaban || item.answer || ""
+          ).toString().trim();
+          if (!jawabanAkhir && item.kunci && !/^[A-E]$/i.test(String(item.kunci).trim())) {
+            jawabanAkhir = String(item.kunci).trim();
+          }
+        }
+
+        // Pembahasan: pertahankan LaTeX agar bisa di-render (layar + PDF)
+        let pembahasan = String(item.pembahasan || item.penjelasan || "-");
+        pembahasan = unescapeLatex(pembahasan);
+        // Perbaiki sampah pangkat saja, jangan hapus \frac \sqrt \( \)
+        pembahasan = simpleSuperscript(pembahasan);
+        // Batas longgar (max ~1200 karakter) agar turunan tidak putus
+        if (pembahasan.length > 1200) {
+          let cut = pembahasan.slice(0, 1200);
+          const dot = Math.max(cut.lastIndexOf("."), cut.lastIndexOf("!"), cut.lastIndexOf("?"));
+          pembahasan = dot > 200 ? cut.slice(0, dot + 1) : cut + "…";
+        }
+        if (!pg && jawabanAkhir) {
+          const low = pembahasan.toLowerCase();
+          if (!low.includes(String(jawabanAkhir).toLowerCase().slice(0, 20))) {
+            pembahasan = pembahasan.replace(/\s*$/, "") + " Jadi jawaban akhir: " + jawabanAkhir + ".";
+          }
+        }
+
+        const soal = simpleSuperscript(String(item.soal || item.pertanyaan || "-"));
+        return {
+          ...item,
+          nomor: item.nomor || (idx + 1),
+          tipe: pg ? "pg" : "isian",
+          soal,
+          pilihan: pg ? pilihanClean : {},
+          kunci: pg ? kunci : "",
+          jawaban_akhir: pg ? "" : (jawabanAkhir || ""),
+          pembahasan
+        };
+      });
+    }
+
+    function parseJSONRobust(text) {
+      let cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+      try { return JSON.parse(cleaned); } catch(e) {}
+      const start = cleaned.indexOf("["), end = cleaned.lastIndexOf("]");
+      if (start !== -1 && end > start) {
+        let s = cleaned.slice(start, end+1).replace(/,\s*([\]}])/g, "$1");
+        try { return JSON.parse(s); } catch(e) {}
+      }
+      throw new Error("Gagal parse JSON");
+    }
+
+    // ===================== GENERATE =====================
+    async function generateSoal() {
+      if (!currentTier) {
+        alert("Silakan aktivasi kode terlebih dahulu!");
+        return;
+      }
+      const jumlahCheck = parseInt(document.getElementById("jumlahSoal").value) || 1;
+      const gate = await canGenerateSoal(jumlahCheck);
+      if (!gate.allow) {
+        showQuotaModal(gate.reason === "quota_soal" ? "soal" : "both");
+        return;
+      }
+      const apiKey = document.getElementById("apiKey").value.trim();
+      if (!apiKey.startsWith("gsk_")) {
+        alert("Masukkan Groq API Key yang valid");
+        return;
+      }
+
+      const jenjang = document.getElementById("jenjang").value;
+      const kelas = document.getElementById("kelas").value;
+      const mapel = document.getElementById("mapel").value;
+      const level = document.getElementById("level").value;
+      const gaya = document.getElementById("gayaBahasa").value;
+      const jumlah = parseInt(document.getElementById("jumlahSoal").value);
+      const maxAllowed = TIER_LIMITS[currentTier].maxSoal;
+      if (jumlah > maxAllowed) {
+        alert(`Tier ${TIER_LIMITS[currentTier].label} hanya boleh maksimal ${maxAllowed} soal.`);
+        return;
+      }
+
+      let model = document.getElementById("modelSelect").value;
+      if (model === "custom") {
+        model = document.getElementById("customModel").value.trim();
+        if (!model) return alert("Isi nama custom model");
+      }
+      // Auto vision
+      if (uploadedImageBase64) model = VISION_MODEL;
+
+      const btn = document.getElementById("generateBtn");
+      const btnText = document.getElementById("btnText");
+      const btnSpinner = document.getElementById("btnSpinner");
+      btn.disabled = true; btnText.style.display = "none"; btnSpinner.style.display = "inline-block";
+      clearLog();
+      document.getElementById("exportPdfBtn").classList.add("hidden");
+      lastSoalList = [];
+
+      log("Memulai generate...", "info");
+      log(`${jenjang} Kls ${kelas} | ${mapel} | ${level} | ${jumlah} soal | ${gaya}`, "info");
+      log("Model: " + model, "info");
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = `<div class="empty-state"><p>Sedang generate soal...</p></div>`;
+
+      try {
+        let messages = [];
+        if (uploadedImageBase64) {
+          messages = [{
+            role: "user",
+            content: [
+              { type: "text", text: `Baca SEMUA soal di gambar ini. Deteksi jenis tiap soal:
+
+MODE PG (pilihan ganda): jika di gambar ada opsi A B C D E (atau A-D).
+- tipe: "pg"
+- pilihan: objek A-E (isi sesuai gambar)
+- kunci: huruf A/B/C/D/E yang benar
+- pembahasan: langkah singkat sampai jawaban
+- jawaban_akhir: "" (kosong)
+
+MODE ISIAN: jika soal hanya titik-titik, kolom kosong, atau minta isi angka/rumus TANPA opsi A-E.
+- tipe: "isian"
+- pilihan: {} (objek kosong, JANGAN buat opsi A-E palsu)
+- kunci: "" (kosong, JANGAN isi "A")
+- jawaban_akhir: WAJIB diisi (angka/rumus/teks jawaban akhir)
+- pembahasan: langkah lengkap sampai jawaban akhir, JANGAN dipotong di tengah
+
+Bahasa Indonesia. Tanpa LaTeX rumit (pakai unicode ² √ π). Output HANYA JSON array:
+[{"nomor":1,"tipe":"pg|isian","soal":"...","pilihan":{},"kunci":"","jawaban_akhir":"...","pembahasan":"..."}]` },
+              { type: "image_url", image_url: { url: uploadedImageBase64 } }
+            ]
+          }];
+        } else {
+          messages = [
+            { role: "system", content: SYSTEM_GEMA },
+            { role: "user", content: buildPrompt(jenjang, kelas, mapel, level, jumlah, gaya) }
+          ];
+        }
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.6,
+            max_tokens: 8192
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error?.message || "HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || "";
+        if (!content) throw new Error("Respons kosong");
+
+        log("Parse JSON...", "info");
+        let parsed = parseJSONRobust(content);
+        let soalList = Array.isArray(parsed) ? parsed :
+                       parsed.soal || parsed.questions || parsed.data ||
+                       Object.values(parsed).find(v => Array.isArray(v));
+
+        if (!Array.isArray(soalList) || !soalList.length) throw new Error("Tidak ada soal");
+
+        soalList = sanitizeSoalList(soalList);
+        lastSoalList = soalList;
+        lastMeta = { jenjang, kelas, mapel, level, gaya, jumlah: soalList.length, model };
+        await addSoalUsage(soalList.length);
+        updateQuotaBanner();
+
+        log(`Berhasil ${soalList.length} soal! Kuota hari ini: ${getQuotaStatus().soalUsed}/${getQuotaStatus().soalMax}`, "ok");
+        renderSoal(soalList);
+        document.getElementById("exportPdfBtn").classList.remove("hidden");
+        if (getQuotaStatus().soalExhausted) showQuotaModal("soal");
+
+      } catch (err) {
+        log("Error: " + err.message, "err");
+        resultsDiv.innerHTML = `<div class="card" style="border-color:var(--danger)">
+          <p style="color:var(--danger);font-weight:600">❌ Gagal generate</p>
+          <p style="margin-top:8px;color:var(--muted);font-size:0.9rem">${err.message}</p>
+        </div>`;
+      } finally {
+        btn.disabled = false;
+        btnText.style.display = "inline";
+        btnSpinner.style.display = "none";
+      }
+    }
+
+    function graphBlockHtml(item, idx, forPdf) {
+      const g = item.grafik;
+      if (!g || typeof g !== "object") return "";
+      const id = (forPdf ? "pdf-graph-" : "graph-") + idx;
+      const caption = g.judul || g.title || g.tipe || "Grafik";
+      return `<div class="graph-wrap">
+        <canvas id="${id}" width="360" height="260" data-graph='${JSON.stringify(g).replace(/'/g, "&#39;")}'></canvas>
+        <div class="graph-caption">${caption}</div>
+      </div>`;
+    }
+
+    function renderSoal(list) {
+      const div = document.getElementById("results");
+      let html = `<div style="margin-bottom:12px;color:var(--muted);font-size:0.9rem">
+        ${list.length} soal • ${lastMeta.jenjang} Kelas ${lastMeta.kelas} • ${lastMeta.mapel}
+        <br><small>⚠️ Hasil akan hilang jika tidak di-Export PDF</small>
+      </div>`;
+
+      list.forEach((item, idx) => {
+        const nomor = item.nomor || (idx+1);
+        const soal = item.soal || "-";
+        const pembahasan = item.pembahasan || "-";
+        const pg = isPilihanGanda(item) || item.tipe === "pg";
+        let body = "";
+
+        if (pg) {
+          const pilihan = item.pilihan || {};
+          const kunci = (item.kunci || "").toString().toUpperCase();
+          let opts = "";
+          ["A","B","C","D","E"].forEach(L => {
+            const txt = pilihan[L];
+            if (txt && String(txt).trim() && String(txt).trim() !== "-") {
+              opts += `<div class="option"><span class="letter">${L}.</span><span>${txt}</span></div>`;
+            }
+          });
+          body = `
+            <div class="options">${opts}</div>
+            <div class="answer-box"><strong>Kunci: ${kunci || "-"}</strong></div>`;
+        } else {
+          const jaw = item.jawaban_akhir || item.jawaban || "";
+          body = `
+            <div class="answer-box"><strong>JAWABAN: ${jaw || "-"}</strong></div>`;
+        }
+
+        html += `<div class="question-card" data-idx="${idx}">
+          <div class="q-number">Soal ${nomor}${pg ? "" : " • Isian"}</div>
+          <div class="q-text">${soal}</div>
+          ${graphBlockHtml(item, idx, false)}
+          ${body}
+          <div class="pembahasan"><strong>Pembahasan:</strong><br>${pembahasan}</div>
+          <div class="card-actions">
+            <button type="button" class="btn-sm" onclick="regenerateOneSoal(${idx})" id="regenBtn${idx}">🔄 Generate Ulang Soal Ini</button>
+            <button type="button" class="btn-sm" onclick="openEditSoal(${idx})">✏️ Edit Soal</button>
+          </div>
+        </div>`;
+      });
+      div.innerHTML = html;
+      scrubCarets(div);
+      renderLatex(div);
+      drawAllGraphs(div);
+    }
+
+    // ===================== EDIT / GENERATE ULANG PER SOAL =====================
+    async function regenerateOneSoal(idx) {
+      if (!lastSoalList[idx]) return alert("Soal tidak ditemukan");
+      if (!currentTier) return alert("Silakan aktivasi kode terlebih dahulu!");
+      const apiKey = document.getElementById("apiKey").value.trim();
+      if (!apiKey.startsWith("gsk_")) return alert("Masukkan Groq API Key yang valid");
+
+      const btn = document.getElementById("regenBtn" + idx);
+      if (btn) { btn.disabled = true; btn.textContent = "⏳ Generate ulang..."; }
+
+      try {
+        const jenjang = lastMeta.jenjang || document.getElementById("jenjang").value;
+        const kelas = lastMeta.kelas || document.getElementById("kelas").value;
+        const mapel = lastMeta.mapel || document.getElementById("mapel").value;
+        const level = lastMeta.level || document.getElementById("level").value;
+        const gaya = lastMeta.gaya || document.getElementById("gayaBahasa").value;
+        const old = lastSoalList[idx];
+        const nomor = old.nomor || (idx + 1);
+
+        let model = document.getElementById("modelSelect").value;
+        if (model === "custom") {
+          model = document.getElementById("customModel").value.trim() || "openai/gpt-oss-20b";
+        }
+
+        const userPrompt = `Buat TEPAT 1 soal pilihan ganda PENGGANTI untuk:
+${jenjang} Kelas ${kelas}, mapel ${mapel}, level ${level}, gaya ${gaya}.
+Nomor soal: ${nomor} (hanya metadata, tetap 1 soal saja).
+
+ATURAN KETAT:
+- Output HANYA JSON array berisi 1 objek soal
+- Kunci dan pembahasan WAJIB konsisten: jika kunci "B", pembahasan harus menjelaskan kenapa B benar (bukan huruf lain)
+- 5 opsi A-E homogen, tepat 1 jawaban benar
+- Materi sesuai kelas/mapel, Kurikulum Merdeka/K13
+- Boleh LaTeX \\( \\frac{a}{b} \\), \\( \\sqrt{x} \\)
+- Jangan meniru soal lama berikut (buat yang berbeda): ${(old.soal || "").slice(0, 200)}
+
+Format:
+[{"nomor":${nomor},"tipe":"pg","soal":"...","pilihan":{"A":"...","B":"...","C":"...","D":"...","E":"..."},"kunci":"A","pembahasan":"...","grafik":null}]`;
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: SYSTEM_GEMA },
+              { role: "user", content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 2048
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || ("HTTP " + response.status));
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || "";
+        let parsed = parseJSONRobust(content);
+        let one = Array.isArray(parsed) ? parsed[0] : (parsed.soal ? parsed : null);
+        if (Array.isArray(parsed) && parsed.length) one = parsed[0];
+        else if (parsed && typeof parsed === "object" && (parsed.soal || parsed.pilihan)) one = parsed;
+        if (!one) throw new Error("Gagal parse soal baru");
+
+        const sanitized = sanitizeSoalList([one]);
+        if (!sanitized.length) throw new Error("Soal baru kosong setelah validasi");
+        const neu = sanitized[0];
+        neu.nomor = nomor;
+
+        // Validasi kunci vs pembahasan (peringatan, tetap pakai)
+        const warn = checkKunciPembahasan(neu);
+        lastSoalList[idx] = neu;
+        renderSoal(lastSoalList);
+        if (warn) alert("Soal diganti.\nPeringatan: " + warn);
+        else log("Soal " + nomor + " berhasil digenerate ulang", "ok");
+      } catch (err) {
+        alert("Gagal generate ulang: " + (err.message || err));
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "🔄 Generate Ulang Soal Ini"; }
+      }
+    }
+
+    function checkKunciPembahasan(item) {
+      if (!item || item.tipe === "isian") return "";
+      const kunci = (item.kunci || "").toString().toUpperCase();
+      const p = (item.pembahasan || "").toUpperCase();
+      if (!kunci || !p) return "";
+      // Cari sebutan huruf kunci di pembahasan
+      const letters = ["A", "B", "C", "D", "E"];
+      const mentioned = letters.filter(L =>
+        new RegExp("\\b" + L + "\\b|OPSI\\s*" + L + "|JAWABAN\\s*" + L + "|KUNCI\\s*" + L, "i").test(item.pembahasan || "")
+      );
+      if (mentioned.length && !mentioned.includes(kunci)) {
+        return "Pembahasan menyebut " + mentioned.join("/") + " tetapi kunci = " + kunci + ". Sebaiknya diselaraskan lewat Edit Soal.";
+      }
+      return "";
+    }
+
+    function openEditSoal(idx) {
+      if (!lastSoalList[idx]) return;
+      const item = lastSoalList[idx];
+      const pg = item.tipe === "pg" || isPilihanGanda(item);
+      const pilihan = item.pilihan || {};
+      // Hapus modal lama
+      const old = document.getElementById("editSoalModal");
+      if (old) old.remove();
+
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      backdrop.id = "editSoalModal";
+      backdrop.innerHTML = `
+        <div class="modal-box" onclick="event.stopPropagation()">
+          <h3>✏️ Edit Soal ${item.nomor || (idx + 1)}</h3>
+          <label>Teks Soal</label>
+          <textarea id="editSoalText">${(item.soal || "").replace(/</g, "&lt;")}</textarea>
+          ${pg ? `
+          <label>Opsi A</label><input id="editOptA" value="${escAttr(pilihan.A || "")}" />
+          <label>Opsi B</label><input id="editOptB" value="${escAttr(pilihan.B || "")}" />
+          <label>Opsi C</label><input id="editOptC" value="${escAttr(pilihan.C || "")}" />
+          <label>Opsi D</label><input id="editOptD" value="${escAttr(pilihan.D || "")}" />
+          <label>Opsi E</label><input id="editOptE" value="${escAttr(pilihan.E || "")}" />
+          <label>Kunci Jawaban</label>
+          <select id="editKunci">
+            ${["A","B","C","D","E"].map(L => `<option value="${L}" ${String(item.kunci).toUpperCase()===L?"selected":""}>${L}</option>`).join("")}
+          </select>
+          ` : `
+          <label>Jawaban Akhir</label>
+          <input id="editJawabanAkhir" value="${escAttr(item.jawaban_akhir || item.jawaban || "")}" />
+          `}
+          <label>Pembahasan</label>
+          <textarea id="editPembahasan">${(item.pembahasan || "").replace(/</g, "&lt;")}</textarea>
+          <p style="font-size:0.8rem;color:var(--muted);margin-top:8px;">Pastikan kunci cocok dengan pembahasan (mis. kunci B → pembahasan menjelaskan B).</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" onclick="saveEditSoal(${idx})">💾 Simpan</button>
+            <button type="button" class="btn-sm" onclick="closeEditSoal()">Batal</button>
+          </div>
+        </div>`;
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeEditSoal(); });
+      document.body.appendChild(backdrop);
+      // Isi textarea tanpa entity (setelah HTML parse)
+      document.getElementById("editSoalText").value = item.soal || "";
+      document.getElementById("editPembahasan").value = item.pembahasan || "";
+      if (pg) {
+        ["A","B","C","D","E"].forEach(L => {
+          const el = document.getElementById("editOpt" + L);
+          if (el) el.value = pilihan[L] || "";
+        });
+      }
+    }
+
+    function escAttr(s) {
+      return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    }
+
+    function closeEditSoal() {
+      const m = document.getElementById("editSoalModal");
+      if (m) m.remove();
+    }
+
+    function saveEditSoal(idx) {
+      if (!lastSoalList[idx]) return;
+      const item = { ...lastSoalList[idx] };
+      const pg = item.tipe === "pg" || isPilihanGanda(item);
+      item.soal = document.getElementById("editSoalText").value.trim();
+      item.pembahasan = document.getElementById("editPembahasan").value.trim();
+
+      if (pg) {
+        item.pilihan = {
+          A: document.getElementById("editOptA").value.trim(),
+          B: document.getElementById("editOptB").value.trim(),
+          C: document.getElementById("editOptC").value.trim(),
+          D: document.getElementById("editOptD").value.trim(),
+          E: document.getElementById("editOptE").value.trim()
+        };
+        item.kunci = (document.getElementById("editKunci").value || "").toUpperCase();
+        item.tipe = "pg";
+        // Validasi: kunci harus ada isinya
+        if (!item.pilihan[item.kunci]) {
+          return alert("Kunci " + item.kunci + " tidak punya isi opsi. Isi dulu opsi tersebut.");
+        }
+        const warn = checkKunciPembahasan(item);
+        if (warn) {
+          const ok = confirm(warn + "\n\nTetap simpan?");
+          if (!ok) return;
+        }
+      } else {
+        item.jawaban_akhir = document.getElementById("editJawabanAkhir").value.trim();
+        item.kunci = "";
+        item.tipe = "isian";
+      }
+
+      lastSoalList[idx] = item;
+      closeEditSoal();
+      renderSoal(lastSoalList);
+      log("Soal " + (item.nomor || (idx + 1)) + " disimpan (edit manual)", "ok");
+    }
+
+    // ===================== GRAFIK (canvas — setara matplotlib di browser) =====================
+    function compileFn(expr) {
+      let e = String(expr || "x").trim();
+      e = e.replace(/\^/g, "**");
+      e = e.replace(/(\d)\s*([a-zA-Z])/g, "$1*$2");
+      e = e.replace(/π/g, "Math.PI").replace(/\bpi\b/gi, "Math.PI");
+      e = e.replace(/\bsin\b/gi, "Math.sin").replace(/\bcos\b/gi, "Math.cos");
+      e = e.replace(/\btan\b/gi, "Math.tan").replace(/\bsqrt\b/gi, "Math.sqrt");
+      e = e.replace(/\babs\b/gi, "Math.abs").replace(/\blog\b/gi, "Math.log");
+      e = e.replace(/\bexp\b/gi, "Math.exp");
+      try {
+        // eslint-disable-next-line no-new-func
+        return new Function("x", `"use strict"; return (${e});`);
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function drawGraphOnCanvas(canvas, g) {
+      if (!canvas || !g) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, H);
+      const pad = 28;
+      const tipe = (g.tipe || g.type || "fungsi").toLowerCase();
+
+      // axes helper
+      function drawAxes(xmin, xmax, ymin, ymax) {
+        const xTo = x => pad + ((x - xmin) / (xmax - xmin)) * (W - 2 * pad);
+        const yTo = y => H - pad - ((y - ymin) / (ymax - ymin)) * (H - 2 * pad);
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        // grid
+        for (let i = 0; i <= 4; i++) {
+          const yy = pad + (i / 4) * (H - 2 * pad);
+          const xx = pad + (i / 4) * (W - 2 * pad);
+          ctx.beginPath(); ctx.moveTo(pad, yy); ctx.lineTo(W - pad, yy); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(xx, pad); ctx.lineTo(xx, H - pad); ctx.stroke();
+        }
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 1.5;
+        // x axis
+        if (ymin <= 0 && ymax >= 0) {
+          const y0 = yTo(0);
+          ctx.beginPath(); ctx.moveTo(pad, y0); ctx.lineTo(W - pad, y0); ctx.stroke();
+        }
+        // y axis
+        if (xmin <= 0 && xmax >= 0) {
+          const x0 = xTo(0);
+          ctx.beginPath(); ctx.moveTo(x0, pad); ctx.lineTo(x0, H - pad); ctx.stroke();
+        }
+        ctx.fillStyle = "#334155";
+        ctx.font = "11px sans-serif";
+        ctx.fillText(String(xmin), pad, H - 8);
+        ctx.fillText(String(xmax), W - pad - 12, H - 8);
+        return { xTo, yTo };
+      }
+
+      if (tipe === "fungsi" || tipe === "function" || tipe === "kurva") {
+        const fn = compileFn(g.rumus || g.fn || "x");
+        const xmin = Number(g.xmin != null ? g.xmin : -5);
+        const xmax = Number(g.xmax != null ? g.xmax : 5);
+        if (!fn) {
+          ctx.fillStyle = "#991b1b";
+          ctx.font = "13px sans-serif";
+          ctx.fillText("Gagal gambar fungsi", 20, H / 2);
+          return;
+        }
+        const samples = [];
+        let ymin = Infinity, ymax = -Infinity;
+        for (let i = 0; i <= 200; i++) {
+          const x = xmin + (i / 200) * (xmax - xmin);
+          let yv;
+          try { yv = fn(x); } catch (e) { continue; }
+          if (typeof yv !== "number" || !isFinite(yv)) continue;
+          samples.push([x, yv]);
+          if (yv < ymin) ymin = yv;
+          if (yv > ymax) ymax = yv;
+        }
+        if (!samples.length) return;
+        if (ymin === ymax) { ymin -= 1; ymax += 1; }
+        const padY = (ymax - ymin) * 0.1 || 1;
+        ymin -= padY; ymax += padY;
+        const { xTo, yTo } = drawAxes(xmin, xmax, ymin, ymax);
+        ctx.strokeStyle = "#2563eb";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        samples.forEach(([x, yv], i) => {
+          const px = xTo(x), py = yTo(yv);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+      } else if (tipe === "lingkaran" || tipe === "circle") {
+        const r = Number(g.r || g.radius || 2);
+        const { xTo, yTo } = drawAxes(-r - 1, r + 1, -r - 1, r + 1);
+        ctx.strokeStyle = "#2563eb";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const cx = xTo(0), cy = yTo(0);
+        const rx = Math.abs(xTo(r) - xTo(0));
+        ctx.arc(cx, cy, rx, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (tipe === "titik" || tipe === "scatter") {
+        const pts = g.titik || g.points || [];
+        let xmin = 0, xmax = 1, ymin = 0, ymax = 1;
+        pts.forEach(p => {
+          const x = Number(p[0]), yv = Number(p[1]);
+          if (x < xmin) xmin = x; if (x > xmax) xmax = x;
+          if (yv < ymin) ymin = yv; if (yv > ymax) ymax = yv;
+        });
+        const { xTo, yTo } = drawAxes(xmin - 1, xmax + 1, ymin - 1, ymax + 1);
+        ctx.fillStyle = "#dc2626";
+        pts.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(xTo(Number(p[0])), yTo(Number(p[1])), 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      } else if (tipe === "persegi" || tipe === "segitiga" || tipe === "bangun") {
+        const { xTo, yTo } = drawAxes(-1, 5, -1, 5);
+        ctx.strokeStyle = "#2563eb";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (tipe === "segitiga") {
+          ctx.moveTo(xTo(1), yTo(1));
+          ctx.lineTo(xTo(4), yTo(1));
+          ctx.lineTo(xTo(2.5), yTo(4));
+          ctx.closePath();
+        } else {
+          ctx.rect(xTo(1), yTo(4), xTo(4) - xTo(1), yTo(1) - yTo(4));
+        }
+        ctx.stroke();
+      } else {
+        // fallback: coba sebagai fungsi
+        drawGraphOnCanvas(canvas, { ...g, tipe: "fungsi", rumus: g.rumus || "x" });
+      }
+    }
+
+    function drawAllGraphs(root) {
+      if (!root) return;
+      root.querySelectorAll("canvas[data-graph]").forEach(cv => {
+        try {
+          const g = JSON.parse(cv.getAttribute("data-graph"));
+          drawGraphOnCanvas(cv, g);
+        } catch (e) { console.warn("graph draw", e); }
+      });
+    }
+
+    // ===================== LATEX =====================
+    const SUP = { "0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","+":"⁺","-":"⁻","/":"ᐟ" };
+    const SUB = { "0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉" };
+
+    function toSup(str) {
+      return String(str).split("").map(c => SUP[c] || c).join("");
+    }
+    function toSub(str) {
+      return String(str).split("").map(c => SUB[c] || c).join("");
+    }
+
+    function hasLatexCmd(s) {
+      return /\\frac|\\dfrac|\\sqrt|\\int|\\sum|\\prod|\\lim|\\begin|\\left|\\right|\\sin|\\cos|\\tan|\\ln|\\log|\\pi|\\infty|\\\(|\\\[|\$\$|\$/.test(String(s || ""));
+    }
+
+    // Ganti ^n → unicode HANYA jika teks TIDAK berisi perintah LaTeX
+    // (kalau ada \frac dll, biarkan KaTeX yang render — jangan rusak isi opsi)
+    function simpleSuperscript(s) {
+      if (!s || typeof s !== "string") return s;
+      if (hasLatexCmd(s)) return s;
+      let t = s;
+      for (let i = 0; i < 6; i++) {
+        const before = t;
+        t = t.replace(/\^\{([0-9]+)\/([0-9]+)\}/g, (_, a, b) => toSup(a) + "/" + toSup(b));
+        t = t.replace(/\^\{([0-9]+)\}/g, (_, d) => toSup(d));
+        t = t.replace(/\^([0-9])/g, (_, d) => SUP[d] || ("^" + d));
+        t = t.replace(/\^\{\\+\)*([0-9]+)\}?/g, (_, d) => toSup(d));
+        t = t.replace(/\^\\([0-9])/g, (_, d) => SUP[d] || ("^" + d));
+        if (t === before) break;
+      }
+      return t;
+    }
+
+    // Bersihkan sampah LaTeX HANYA untuk Pembahasan → teks unicode cantik
+    function cleanPembahasan(s) {
+      if (!s) return s;
+      let t = String(s);
+
+      // Unescape berlapis
+      t = t.replace(/\\\\/g, "\\");
+      t = t.replace(/\\\\/g, "\\");
+
+      // Matriks → teks kotak biasa
+      t = t.replace(
+        /\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}(?:\{[^}]*\})?[\s\S]*?\\end\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}/g,
+        (m) => "\n" + matrixToPlain(m) + "\n"
+      );
+
+      // Hapus delimiter LaTeX
+      t = t.replace(/\\\(|\\\)|\\\[|\\\]|\$\$|\$/g, "");
+
+      // \frac{a}{b} → (a)/(b)
+      t = t.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)");
+      t = t.replace(/\\dfrac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)");
+
+      // \sqrt{x} → √(x)  |  \sqrt[n]{x} → ⁿ√(x)
+      t = t.replace(/\\sqrt\[([^\]]+)\]\{([^{}]*)\}/g, (_, n, x) => toSup(n) + "√(" + x + ")");
+      t = t.replace(/\\sqrt\{([^{}]*)\}/g, "√($1)");
+
+      // \int_{a}^{b} → ∫ₐᵇ  |  \int → ∫
+      t = t.replace(/\\int_\{([^{}]*)\}\^\{([^{}]*)\}/g, (_, a, b) => "∫" + toSub(a) + toSup(b));
+      t = t.replace(/\\int_([0-9a-zA-Z])\^([0-9a-zA-Z])/g, (_, a, b) => "∫" + toSub(a) + toSup(b));
+      t = t.replace(/\\int/g, "∫");
+      t = t.replace(/\\sum/g, "Σ").replace(/\\prod/g, "Π").replace(/\\lim/g, "lim");
+
+      // Superscript / subscript berserakan: x^{3/2}, x^{5}, x^{\)1} dll
+      t = t.replace(/\^\{([0-9]+)\/([0-9]+)\}/g, (_, a, b) => toSup(a) + "/" + toSup(b));
+      t = t.replace(/\^\{([0-9]+)\}/g, (_, d) => toSup(d));
+      t = t.replace(/\^([0-9])/g, (_, d) => SUP[d] || "^" + d);
+      t = t.replace(/_\{([0-9]+)\}/g, (_, d) => toSub(d));
+      t = t.replace(/_([0-9])/g, (_, d) => SUB[d] || "_" + d);
+
+      // Sampah sisa dari render gagal: x^{\)1}, x^{\\), ^{\) dll
+      t = t.replace(/\^\{\\?\)+([0-9]+)\}?/g, (_, d) => toSup(d));
+      t = t.replace(/\^\{\\+/g, "");
+      t = t.replace(/\{\\+\}/g, "");
+      t = t.replace(/\\+\)/g, "");
+      t = t.replace(/\\+\(/g, "");
+
+      // Simbol umum
+      t = t.replace(/\\cdot/g, "·").replace(/\\times/g, "×").replace(/\\div/g, "÷");
+      t = t.replace(/\\pm/g, "±").replace(/\\mp/g, "∓");
+      t = t.replace(/\\leq/g, "≤").replace(/\\geq/g, "≥").replace(/\\neq/g, "≠");
+      t = t.replace(/\\approx/g, "≈").replace(/\\infty/g, "∞");
+      t = t.replace(/\\pi/g, "π").replace(/\\theta/g, "θ").replace(/\\lambda/g, "λ");
+      t = t.replace(/\\alpha/g, "α").replace(/\\beta/g, "β").replace(/\\gamma/g, "γ");
+      t = t.replace(/\\Delta/g, "Δ").replace(/\\partial/g, "∂").replace(/\\nabla/g, "∇");
+      t = t.replace(/\\rightarrow/g, "→").replace(/\\to/g, "→").replace(/\\Rightarrow/g, "⇒");
+      t = t.replace(/\\left\(|\\right\)/g, "");
+      t = t.replace(/\\left\[|\\right\]/g, "");
+      t = t.replace(/\\,/g, " ").replace(/\\;/g, " ").replace(/\\quad/g, " ");
+      t = t.replace(/\\text\{([^{}]*)\}/g, "$1");
+      t = t.replace(/\\mathrm\{([^{}]*)\}/g, "$1");
+
+      // Superscript dulu SEBELUM hapus { }
+      t = simpleSuperscript(t);
+
+      // Hapus sisa { } kosong / tidak seimbang sederhana
+      t = t.replace(/\{([^{}]*)\}/g, "$1");
+      t = t.replace(/[{}]/g, "");
+      t = t.replace(/\\+/g, "");
+
+      // Rapikan spasi + pass superscript sekali lagi (untuk sisa ^2)
+      t = t.replace(/[ \t]+/g, " ").replace(/\s+\./g, ".").trim();
+      t = simpleSuperscript(t);
+      return t;
+    }
+
+    function unescapeLatex(s) {
+      if (!s) return s;
+      return s
+        .replace(/\\\\\(/g, "\\(").replace(/\\\\\)/g, "\\)")
+        .replace(/\\\\\[/g, "\\[").replace(/\\\\\]/g, "\\]")
+        .replace(/\\\\([a-zA-Z]+)/g, "\\$1")
+        .replace(/\\\\([{}])/g, "\\$1")
+        .replace(/\\\\,/g, "\\,")
+        .replace(/\\\\ /g, "\\ ");
+    }
+
+    function looksLikeMath(s) {
+      return /\\frac|\\int|\\sqrt|\\sum|\\prod|\\lim|\\left|\\right|\\pi|\\infty|\\cdot|\\times|\\leq|\\geq|\\neq|\\sin|\\cos|\\tan|\\log|\\ln|\^\{|_\{|\\alpha|\\beta|\\theta|\\lambda|\\partial|\\Delta|\\pm|\\begin\{(?:p|b|v)?matrix\}/.test(s)
+        || /[a-zA-Z0-9]\^[0-9{]|[a-zA-Z0-9]_\{/.test(s);
+    }
+
+    function alreadyDelimited(s) {
+      return /\\\(|\\\[|\$\$|\$[^$]/.test(s);
+    }
+
+    function hasMatrix(s) {
+      return /\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}/.test(s || "");
+    }
+
+    // Fallback matriks teks biasa (jika KaTeX gagal)
+    function matrixToPlain(latex) {
+      let s = String(latex);
+      s = s.replace(/\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}(?:\{[^}]*\})?/g, "");
+      s = s.replace(/\\end\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}/g, "");
+      const rows = s.split(/\\\\/).map(row => {
+        const cells = row.split("&").map(c => c.replace(/\\/g, "").trim()).filter(Boolean);
+        return cells.length ? "[ " + cells.join("  ") + " ]" : "";
+      }).filter(Boolean);
+      return rows.join("\n");
+    }
+
+    // Bungkus environment matriks dengan $$ ... $$ (sekali saja)
+    function wrapMatrices(s) {
+      if (!s || !hasMatrix(s)) return s;
+      // Hapus $$ yang sudah menempel berantakan di sekitar matrix
+      s = s.replace(/\$\$\s*(\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\})/g, "$1");
+      s = s.replace(/(\\end\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\})\s*\$\$/g, "$1");
+      return s.replace(
+        /(\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}(?:\{[^}]*\})?[\s\S]*?\\end\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\})/g,
+        (match, _g, offset, full) => {
+          const before = full.slice(Math.max(0, offset - 2), offset);
+          if (before === "$$") return match; // sudah dibungkus
+          return "$$" + match + "$$";
+        }
+      );
+    }
+
+    // Auto-wrap undelimited math expressions into \( ... \)
+    function autoWrapMath(s) {
+      if (!s) return s;
+      // Matriks dulu (display math)
+      if (hasMatrix(s)) {
+        s = wrapMatrices(s);
+      }
+      if (alreadyDelimited(s) && !hasMatrix(s)) return s;
+      if (!looksLikeMath(s) && !hasMatrix(s)) return s;
+
+      // If the whole string is mostly math (option often is pure formula), wrap all
+      const textOnly = s.replace(/<[^>]+>/g, "").trim();
+      // Jangan bungkus ulang jika sudah ada $$
+      if (textOnly.includes("$$")) return s;
+
+      const mathRatio = (textOnly.match(/\\|[\^_{}=+\-*/]|\\frac|\\int/g) || []).length;
+      if (mathRatio >= 1 && textOnly.length < 180 && !hasMatrix(s)) {
+        return "\\(" + textOnly + "\\)";
+      }
+
+      // Jangan double-wrap jika sudah ada \( \)
+      if (/\\\(|\\\[|\$\$/.test(s)) return s;
+
+      let out = s;
+      // \frac{...}{...} termasuk pangkat di dalam argumen (x^2)
+      out = out.replace(/(\\(?:frac|dfrac|tfrac|binom)\{[^{}]*\}\{[^{}]*\})/g, "\\($1\\)");
+      out = out.replace(/(\\(?:sqrt|hat|bar|vec|tilde|mathbf|mathrm|text)(?:\[[^\]]*\])?\{[^{}]*\})/g, "\\($1\\)");
+      out = out.replace(/(\\(?:int|iint|iiint|sum|prod|lim)(?:_\{[^{}]*\}|\^[{\w]|_[{\w])[^.,;:!?\n]{0,80})/g, "\\($1\\)");
+      return out;
+    }
+
+    function prepareMathHTML(html) {
+      if (!html) return html;
+      let s = unescapeLatex(String(html));
+      // Jangan rusak \frac / \sqrt dengan unicode superscript
+      if (!hasLatexCmd(s)) s = simpleSuperscript(s);
+      s = wrapMatrices(s);
+      // Opsi murni pecahan/rumus: bungkus supaya KaTeX pasti render
+      s = autoWrapMath(s);
+      return s;
+    }
+
+    // Ganti matriks mentah yang gagal render jadi teks kotak
+    function fallbackRawMatrices(el) {
+      if (!el) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(node => {
+        const t = node.nodeValue || "";
+        if (!hasMatrix(t) && !/\\begin\{/.test(t)) return;
+        // Ganti tiap environment matriks di teks
+        const replaced = t.replace(
+          /\\begin\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}(?:\{[^}]*\})?[\s\S]*?\\end\{(?:pmatrix|bmatrix|vmatrix|matrix|array)\}/g,
+          (m) => "\n" + matrixToPlain(m) + "\n"
+        );
+        if (replaced !== t) {
+          const pre = document.createElement("span");
+          pre.style.whiteSpace = "pre-wrap";
+          pre.style.fontFamily = "ui-monospace, monospace";
+          pre.style.display = "inline-block";
+          pre.textContent = replaced;
+          node.parentNode.replaceChild(pre, node);
+        }
+      });
+    }
+
+    function renderLatex(el, opts) {
+      if (!el) return;
+      const immediate = opts && opts.immediate;
+      const run = () => {
+        if (typeof renderMathInElement !== "function" || typeof katex === "undefined") return false;
+        try {
+          // Soal + opsi + pembahasan + kunci — semua boleh LaTeX
+          const selectors = [".q-text", ".option", ".option span", ".answer-box", ".pembahasan"];
+          el.querySelectorAll(selectors.join(",")).forEach(node => {
+            if (node.querySelector && node.querySelector(".katex")) return;
+            let raw = node.innerHTML;
+            if (!raw) return;
+            // Bersihkan $$ ganda / sisa mentah yang gagal
+            raw = raw.replace(/\$\$\s*\$\$/g, "$$");
+            if (looksLikeMath(raw) || hasMatrix(raw) || /\\\(|\\\[|\$|\\frac|\\sqrt|\\begin/.test(raw) || /\^\{|_\{|\^[0-9]/.test(raw)) {
+              node.innerHTML = prepareMathHTML(raw);
+            }
+          });
+          renderMathInElement(el, {
+            delimiters: [
+              { left: "$$", right: "$$", display: true },
+              { left: "\\[", right: "\\]", display: true },
+              { left: "\\(", right: "\\)", display: false },
+              { left: "$", right: "$", display: false }
+            ],
+            throwOnError: false,
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+          });
+          // Matriks yang gagal KaTeX → teks kotak rapi
+          fallbackRawMatrices(el);
+          // Hapus sisa ^2 di teks non-katex
+          scrubCarets(el);
+          // Hilangkan sisa $$ mentah yang tidak ter-render
+          el.querySelectorAll(".q-text, .option, .pembahasan, .answer-box").forEach(node => {
+            if (node.querySelector(".katex")) return;
+            if (node.innerHTML && node.innerHTML.includes("$$")) {
+              node.innerHTML = node.innerHTML.replace(/\$\$/g, "");
+            }
+          });
+          return true;
+        } catch (e) {
+          console.warn("KaTeX render error", e);
+          fallbackRawMatrices(el);
+          scrubCarets(el);
+          return false;
+        }
+      };
+      if (immediate) {
+        run();
+        return;
+      }
+      setTimeout(() => {
+        if (run()) return;
+        let n = 0;
+        const t = setInterval(() => {
+          n++;
+          if (run() || n > 40) clearInterval(t);
+        }, 100);
+      }, 50);
+    }
+
+    // Pembersih akhir: ganti sisa ^digit di text node (termasuk di dalam .pembahasan)
+    function scrubCarets(el) {
+      if (!el) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(node => {
+        // Jangan ubah isi .katex yang sudah ter-render
+        if (node.parentElement && node.parentElement.closest(".katex")) return;
+        const t = node.nodeValue;
+        if (!t || t.indexOf("^") === -1) return;
+        const fixed = simpleSuperscript(t);
+        if (fixed !== t) node.nodeValue = fixed;
+      });
+    }
+
+    // ===================== EXPORT PDF (html2canvas = sama dengan layar) =====================
+    async function exportPDF() {
+      if (!lastSoalList.length) return alert("Belum ada soal");
+      if (typeof html2canvas !== "function") {
+        alert("html2canvas belum termuat. Cek koneksi internet lalu refresh.");
+        return;
+      }
+
+      const btn = document.getElementById("exportPdfBtn");
+      if (btn) { btn.disabled = true; btn.textContent = "⏳ Membuat PDF..."; }
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const isRaja = currentTier === "raja";
+        const customHeader = isRaja
+          ? ((document.getElementById("customPdfHeader") && document.getElementById("customPdfHeader").value) || "").trim()
+          : "";
+        const isModeGuru = isRaja && document.getElementById("modeGuru") && document.getElementById("modeGuru").checked;
+        const tierInfo = TIER_LIMITS[currentTier] || TIER_LIMITS.lite;
+
+        // Root cetak (tema terang supaya PDF jelas; isi = sama dengan layar)
+        let root = document.getElementById("pdf-print-root");
+        if (root) root.remove();
+        root = document.createElement("div");
+        root.id = "pdf-print-root";
+
+        let headerHtml = "";
+        if (isRaja) {
+          if (customHeader) headerHtml = `<h1 style="text-align:center;font-size:18px;margin:0 0 8px;">${customHeader}</h1>`;
+        } else {
+          headerHtml = `<h1 style="text-align:center;font-size:18px;margin:0 0 4px;">GEMA Generasi Emas</h1>
+            <p style="text-align:center;color:#b45309;font-size:12px;margin:0 0 8px;">Generator Soal SD • SMP • SMA/SMK • TKA</p>`;
+        }
+        headerHtml += `<p style="text-align:center;font-size:13px;font-weight:600;margin:0 0 4px;">${lastMeta.jenjang || ""} Kelas ${lastMeta.kelas || ""} | ${lastMeta.mapel || ""} | ${lastMeta.level || ""}</p>
+          <p style="text-align:center;font-size:11px;color:#6b7280;margin:0 0 12px;">${lastMeta.jumlah || lastSoalList.length} soal • ${new Date().toLocaleDateString("id-ID")}</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;"/>`;
+
+        let cards = "";
+        lastSoalList.forEach((item, idx) => {
+          const nomor = item.nomor || (idx + 1);
+          const pg = item.tipe === "pg" || isPilihanGanda(item);
+          let body = "";
+          if (pg) {
+            const pilihan = item.pilihan || {};
+            let opts = "";
+            ["A","B","C","D","E"].forEach(L => {
+              const txt = pilihan[L];
+              if (txt && String(txt).trim() && String(txt).trim() !== "-") {
+                // Inline style paksa terang (html2canvas kadang ignore CSS var dark)
+                opts += `<div class="option" style="background:#fff;color:#111;border:1px solid #d1d5db;padding:10px 12px;border-radius:8px;margin:4px 0;display:flex;gap:8px;"><strong style="color:#1d4ed8;">${L}.</strong> <span>${txt}</span></div>`;
+              }
+            });
+            body = `<div class="options">${opts}</div><div class="answer-box" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:10px 12px;border-radius:8px;margin-top:8px;">Kunci: ${(item.kunci || "").toString().toUpperCase() || "-"}</div>`;
+          } else {
+            body = `<div class="answer-box" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:10px 12px;border-radius:8px;">JAWABAN: ${item.jawaban_akhir || item.jawaban || "-"}</div>`;
+          }
+          if (!isModeGuru) {
+            body += `<div class="pembahasan" style="background:#f8fafc;border:1px solid #e2e8f0;color:#374151;padding:10px 12px;border-radius:8px;margin-top:8px;"><strong style="color:#1d4ed8;">Pembahasan:</strong><br>${item.pembahasan || "-"}</div>`;
+          }
+          cards += `<div class="question-card" style="background:#fff;border:1px solid #e5e7eb;color:#111;padding:14px 16px;margin-bottom:14px;border-radius:10px;">
+            <div class="q-number" style="color:#1e3a8a;font-weight:700;">Soal ${nomor}${pg ? "" : " • Isian"}</div>
+            <div class="q-text" style="color:#111;">${item.soal || "-"}</div>
+            ${graphBlockHtml(item, idx, true)}
+            ${body}
+          </div>`;
+        });
+
+        if (isModeGuru) {
+          cards += `<h2 style="font-size:16px;margin:20px 0 12px;">KUNCI JAWABAN & PEMBAHASAN</h2>`;
+          lastSoalList.forEach((item, idx) => {
+            const nomor = item.nomor || (idx + 1);
+            const pg = item.tipe === "pg" || isPilihanGanda(item);
+            const ans = pg
+              ? `Kunci: ${(item.kunci || "").toString().toUpperCase() || "-"}`
+              : `JAWABAN: ${item.jawaban_akhir || item.jawaban || "-"}`;
+            cards += `<div class="question-card">
+              <div class="q-number">Soal ${nomor} → ${ans}</div>
+              <div class="pembahasan">${item.pembahasan || "-"}</div>
+            </div>`;
+          });
+        }
+
+        // Watermark tier (teks di background)
+        let wm = "";
+        if (tierInfo.watermark === "besar") {
+          wm = `<div style="position:absolute;top:40%;left:10%;right:10%;text-align:center;font-size:32px;color:rgba(0,0,0,0.08);transform:rotate(-30deg);pointer-events:none;font-weight:700;">GEMA Generasi Emas Lite</div>`;
+        } else if (tierInfo.watermark === "kecil" || tierInfo.watermark === "footer") {
+          wm = `<div style="position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:rgba(0,0,0,0.25);">GEMA Generasi Emas Sultan</div>`;
+        }
+
+        // Header terpisah + tiap kartu soal = blok utuh (anti page-break di tengah soal)
+        root.innerHTML = `<div style="position:relative;background:#fff;">
+          ${wm}
+          <div id="pdf-header-block" style="background:#fff;padding-bottom:8px;">${headerHtml}</div>
+          <div id="pdf-cards-block">${cards}</div>
+        </div>`;
+        document.body.appendChild(root);
+
+        // Render LaTeX + grafik di area cetak
+        scrubCarets(root);
+        renderLatex(root, { immediate: true });
+        drawAllGraphs(root);
+        await new Promise(r => setTimeout(r, 900));
+        renderLatex(root, { immediate: true });
+        drawAllGraphs(root);
+        await new Promise(r => setTimeout(r, 200));
+
+        const h2cOpts = {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+          logging: false,
+          onclone: (docClone) => {
+            const pr = docClone.getElementById("pdf-print-root");
+            if (!pr) return;
+            pr.querySelectorAll(".option").forEach(n => {
+              n.style.background = "#ffffff";
+              n.style.color = "#111827";
+              n.style.border = "1px solid #d1d5db";
+            });
+            pr.querySelectorAll(".option strong, .option .letter").forEach(n => {
+              n.style.color = "#1d4ed8";
+            });
+            pr.querySelectorAll(".q-text, .pembahasan, .question-card").forEach(n => {
+              n.style.color = n.classList.contains("pembahasan") ? "#374151" : "#111827";
+              if (n.classList.contains("question-card")) n.style.background = "#ffffff";
+            });
+          }
+        };
+
+        const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10;
+        const usableW = pageWidth - margin * 2;
+        const usableH = pageHeight - margin * 2 - 8; // sisakan ruang nomor halaman
+        let y = margin;
+
+        async function addBlockToPdf(el) {
+          if (!el) return;
+          const canvas = await html2canvas(el, h2cOpts);
+          const imgData = canvas.toDataURL("image/jpeg", 0.92);
+          let imgW = usableW;
+          let imgH = (canvas.height * imgW) / canvas.width;
+
+          // Kalau 1 blok lebih tinggi dari 1 halaman: skala muat 1 halaman (jarang)
+          if (imgH > usableH) {
+            const scale = usableH / imgH;
+            imgW = imgW * scale;
+            imgH = usableH;
+          }
+
+          // Tidak muat di sisa halaman → pindah halaman baru (soal tetap UTUH)
+          if (y > margin && y + imgH > margin + usableH) {
+            doc.addPage();
+            y = margin;
+          }
+
+          doc.addImage(imgData, "JPEG", margin, y, imgW, imgH);
+          y += imgH + 3;
+        }
+
+        // 1) Header
+        await addBlockToPdf(document.getElementById("pdf-header-block"));
+
+        // 2) Tiap kartu soal = 1 blok utuh (tidak dipotong di tengah)
+        const cardNodes = root.querySelectorAll(".question-card");
+        for (let i = 0; i < cardNodes.length; i++) {
+          await addBlockToPdf(cardNodes[i]);
+        }
+
+        root.remove();
+
+        // Nomor halaman
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(120);
+          doc.text(`Halaman ${i} / ${totalPages}`, pageWidth / 2, pageHeight - 6, { align: "center" });
+        }
+
+        const filename = `GEMA_${lastMeta.jenjang || "Soal"}_Kls${lastMeta.kelas || ""}_${lastMeta.mapel || ""}_${Date.now()}.pdf`;
+        doc.save(filename);
+
+        // Setelah export sukses, hapus hasil di layar (aturan anti rugi)
+        lastSoalList = [];
+        document.getElementById("results").innerHTML = `<div class="empty-state">
+          <p>✅ PDF berhasil diunduh</p>
+          <p style="font-size:0.85rem;margin-top:8px">Hasil di layar telah dihapus sesuai aturan. LaTeX & grafik ikut tertangkap di PDF.</p>
+        </div>`;
+        document.getElementById("exportPdfBtn").classList.add("hidden");
+
+      } catch (err) {
+        console.error(err);
+        alert("Gagal membuat PDF: " + (err.message || err));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📄 Export PDF";
+        }
+      }
+    }
+
+    // ===================== TABS =====================
+    function switchTab(name) {
+      document.getElementById("tabAi").classList.toggle("active", name === "ai");
+      document.getElementById("tabManual").classList.toggle("active", name === "manual");
+      document.getElementById("tabBtnAi").classList.toggle("active", name === "ai");
+      document.getElementById("tabBtnManual").classList.toggle("active", name === "manual");
+    }
+
+    // ===================== MANUAL JAWAB =====================
+    async function jawabManual() {
+      const apiKey = document.getElementById("apiKey").value.trim();
+      if (!apiKey || !apiKey.startsWith("gsk_")) {
+        alert("Masukkan Groq API Key yang valid");
+        return;
+      }
+
+      const soal = document.getElementById("manualSoal").value.trim();
+      const a = document.getElementById("optA").value.trim();
+      const b = document.getElementById("optB").value.trim();
+      const c = document.getElementById("optC").value.trim();
+      const d = document.getElementById("optD").value.trim();
+      const e = document.getElementById("optE").value.trim();
+
+      if (!soal) return alert("Tulis soal terlebih dahulu");
+      if (!a || !b || !c || !d) return alert("Opsi A, B, C, D wajib diisi");
+
+      let model = document.getElementById("modelSelect").value;
+      if (model === "custom") {
+        model = document.getElementById("customModel").value.trim() || "openai/gpt-oss-20b";
+      }
+      // Manual tidak pakai vision
+      if (model === "qwen/qwen3.8-27b") model = "openai/gpt-oss-20b";
+
+      const btn = document.getElementById("manualBtn");
+      const btnText = document.getElementById("manualBtnText");
+      const btnSpinner = document.getElementById("manualBtnSpinner");
+      btn.disabled = true;
+      btnText.style.display = "none";
+      btnSpinner.style.display = "inline-block";
+
+      const logBox = document.getElementById("manualLog");
+      logBox.style.display = "block";
+      logBox.innerHTML = "";
+      const time = () => new Date().toLocaleTimeString("id-ID");
+      logBox.innerHTML += `<span class="info">[${time()}] Meminta AI menjawab soal...</span>\n`;
+
+      const opsiText = e
+        ? `A. ${a}\nB. ${b}\nC. ${c}\nD. ${d}\nE. ${e}`
+        : `A. ${a}\nB. ${b}\nC. ${c}\nD. ${d}`;
+
+      const prompt = `Kamu adalah guru ahli. Diberikan soal pilihan ganda dan opsi A-E (E bisa kosong). Tugasmu tentukan Kunci Jawaban paling benar dan berikan Pembahasan singkat jelas pakai rumus jika perlu.
+
+Soal:
+${soal}
+
+Opsi:
+${opsiText}
+
+${e ? "" : "Catatan: Opsi E kosong, hanya pilih dari A-D."}
+
+Output HANYA JSON (tanpa markdown):
+{"kunci": "B", "pembahasan": "..."}`;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: "You only output valid JSON. No markdown, no extra text." },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.3,
+            max_tokens: 1024
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error?.message || "HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || "";
+        logBox.innerHTML += `<span class="ok">[${time()}] Respons diterima</span>\n`;
+
+        let parsed;
+        try {
+          let cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+          parsed = JSON.parse(cleaned);
+        } catch (e) {
+          // fallback: cari object
+          const s = content.indexOf("{"), en = content.lastIndexOf("}");
+          if (s !== -1 && en > s) parsed = JSON.parse(content.slice(s, en + 1));
+          else throw new Error("Gagal parse JSON");
+        }
+
+        const kunci = (parsed.kunci || parsed.jawaban || "").toString().toUpperCase().trim();
+        const pembahasan = parsed.pembahasan || parsed.penjelasan || "-";
+
+        // Tampilkan hasil format sama seperti generate
+        const resultsDiv = document.getElementById("results");
+        let optsHtml = "";
+        const opts = { A: a, B: b, C: c, D: d };
+        if (e) opts.E = e;
+        Object.keys(opts).forEach(L => {
+          optsHtml += `<div class="option"><span class="letter">${L}.</span><span>${simpleSuperscript(opts[L])}</span></div>`;
+        });
+
+        resultsDiv.innerHTML = `
+          <div style="margin-bottom:12px;color:var(--muted);font-size:0.9rem;">Hasil AI • Tulis Manual</div>
+          <div class="question-card">
+            <div class="q-number">Soal Manual</div>
+            <div class="q-text">${simpleSuperscript(soal)}</div>
+            <div class="options">${optsHtml}</div>
+            <div class="answer-box"><strong>Kunci Jawaban: ${kunci || "-"}</strong></div>
+            <div class="pembahasan"><strong>Pembahasan:</strong><br/>${cleanPembahasan(pembahasan)}</div>
+          </div>`;
+        renderLatex(resultsDiv);
+
+        logBox.innerHTML += `<span class="ok">[${time()}] Kunci: ${kunci}</span>\n`;
+
+      } catch (err) {
+        logBox.innerHTML += `<span class="err">[${time()}] Error: ${err.message}</span>\n`;
+        document.getElementById("results").innerHTML = `
+          <div class="card" style="border-color:var(--danger)">
+            <p style="color:var(--danger);font-weight:600">❌ Gagal mendapat jawaban AI</p>
+            <p style="margin-top:8px;color:var(--muted);font-size:0.9rem">${err.message}</p>
+          </div>`;
+      } finally {
+        btn.disabled = false;
+        btnText.style.display = "inline";
+        btnSpinner.style.display = "none";
+      }
+    }
+
+    // ===================== CONVERSATION — chat 2 arah dengan GEMA =====================
+    let convRecognition = null;
+    let convRecording = false;
+    let convHistory = []; // {role:'user'|'assistant', content:string}
+    let convLastGema = "Halo! Pilih bahasa di atas, lalu ngobrol. GEMA akan jawab dalam bahasa yang kamu pilih.";
+    let convBusy = false;
+    let convTimerId = null;
+    let convSecondsLeft = 30;
+    let convSessionActive = false;
+    let convVoices = [];
+
+    const CONV_LANGS = {
+      "id-ID": { name: "Indonesia", reply: "Indonesian (Bahasa Indonesia)" },
+      "en-US": { name: "English", reply: "English" },
+      "ja-JP": { name: "日本語", reply: "Japanese" },
+      "zh-CN": { name: "中文", reply: "Mandarin Chinese (Simplified)" },
+      "ko-KR": { name: "한국어", reply: "Korean" },
+      "ar-SA": { name: "العربية", reply: "Arabic" },
+      "es-ES": { name: "Español", reply: "Spanish" },
+      "fr-FR": { name: "Français", reply: "French" },
+      "de-DE": { name: "Deutsch", reply: "German" },
+      "nl-NL": { name: "Nederlands", reply: "Dutch" }
+    };
+
+    // Lite & Sultan: hanya id-ID + en-US
+    // Raja Pro: 10 bahasa
+    // Suara: 1 saja (cewek natural bawaan HP)
+    const FREE_CONV_LANGS = ["id-ID", "en-US"];
+
+    function convTierIsPro() {
+      return currentTier === "raja";
+    }
+
+    function getConvLang() {
+      const el = document.getElementById("convLang");
+      let v = el ? el.value : "id-ID";
+      if (!CONV_LANGS[v]) v = "id-ID";
+      if (!convTierIsPro() && FREE_CONV_LANGS.indexOf(v) < 0) {
+        v = "id-ID";
+        if (el) el.value = v;
+      }
+      return v;
+    }
+
+    function applyConvTierLimits() {
+      const langSel = document.getElementById("convLang");
+      const isPro = convTierIsPro();
+
+      // Semua opsi TERLIHAT. Non-Pro: opsi Pro tetap bisa diklik → popup upgrade (lalu kembali ke default)
+      if (langSel) {
+        Array.from(langSel.options).forEach(opt => {
+          const allowed = isPro || FREE_CONV_LANGS.indexOf(opt.value) >= 0;
+          opt.disabled = false;
+          opt.hidden = false;
+          const base = opt.getAttribute("data-label") || opt.textContent.replace(/\s*🔒.*$/, "").trim();
+          opt.setAttribute("data-label", base);
+          opt.textContent = allowed ? base : (base + " 🔒 Pro");
+        });
+        if (!isPro && FREE_CONV_LANGS.indexOf(langSel.value) < 0) {
+          langSel.value = "id-ID";
+          try { localStorage.setItem("gema_conv_lang", "id-ID"); } catch (e) {}
+        }
+      }
+
+
+      const hint = document.querySelector(".conversation-hint");
+      if (hint) {
+        if (isPro) {
+          hint.innerHTML = "Ngobrol dengan GEMA (maks. <strong>30 detik</strong>/sesi). <strong>Raja Pro:</strong> 10 bahasa. TTS cewek natural bawaan HP (gratis).";
+        } else {
+          hint.innerHTML = "Ngobrol dengan GEMA (maks. <strong>30 detik</strong>/sesi). Opsi berlabel <strong>🔒 Pro</strong> terlihat tapi terkunci. Lite/Sultan: Indonesia & Inggris saja.";
+        }
+      }
+      if (typeof updateConvLangSupportUI === "function") updateConvLangSupportUI();
+    }
+
+    function buildConvSystem() {
+      const code = getConvLang();
+      const info = CONV_LANGS[code];
+      return `You are GEMA, a friendly conversation practice partner for students.
+Rules:
+1. The user selected language code: ${code} (${info.reply}).
+2. ALWAYS reply ONLY in ${info.reply}. Do not switch to another language unless the user explicitly asks to switch.
+3. Keep replies natural, short to medium (2–5 sentences), like a real spoken conversation.
+4. Gently correct major language mistakes only when helpful, without being preachy.
+5. Stay appropriate for school students. Be warm and encouraging.
+6. Do NOT output JSON. Plain conversational text only.`;
+    }
+
+    function setConvStatus(msg) {
+      const el = document.getElementById("convStatus");
+      if (el) el.textContent = msg;
+    }
+
+    function appendConvBubble(role, text) {
+      const chat = document.getElementById("convChat");
+      if (!chat) return;
+      const div = document.createElement("div");
+      div.className = "conv-bubble " + (role === "user" ? "user" : "gema");
+      const who = role === "user" ? "Kamu" : "GEMA";
+      div.innerHTML = `<div class="who">${who}</div>`;
+      const body = document.createElement("div");
+      body.textContent = text;
+      div.appendChild(body);
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function resetConvTimerUI() {
+      const timerEl = document.getElementById("convTimer");
+      if (convTimerId) { clearInterval(convTimerId); convTimerId = null; }
+      convSecondsLeft = 30;
+      convSessionActive = false;
+      if (timerEl) {
+        timerEl.textContent = "30s";
+        timerEl.classList.remove("running", "done");
+      }
+    }
+
+    function startConvSessionTimer() {
+      if (convSessionActive && convTimerId) return; // sudah jalan
+      const timerEl = document.getElementById("convTimer");
+      if (convTimerId) clearInterval(convTimerId);
+      convSecondsLeft = 30;
+      convSessionActive = true;
+      if (timerEl) {
+        timerEl.textContent = "30s";
+        timerEl.classList.add("running");
+        timerEl.classList.remove("done");
+      }
+      setConvStatus("Sesi 30 detik dimulai — ayo ngobrol!");
+      convTimerId = setInterval(() => {
+        convSecondsLeft--;
+        if (timerEl) timerEl.textContent = Math.max(0, convSecondsLeft) + "s";
+        if (convSecondsLeft <= 0) {
+          clearInterval(convTimerId);
+          convTimerId = null;
+          convSessionActive = false;
+          if (timerEl) {
+            timerEl.classList.remove("running");
+            timerEl.classList.add("done");
+            timerEl.textContent = "0s";
+          }
+          if (convRecording) stopMic(false);
+          // Hitungan kuota: sesi 30 dtk (atau sisa yang terpakai dari awal sesi)
+          addChatUsageSec(30).then(() => {
+            updateQuotaBanner();
+            if (getQuotaStatus().chatExhausted) showQuotaModal("chat");
+          });
+          setConvStatus("⏰ 30 detik habis. Sesi selesai — tekan RESET untuk mulai lagi.");
+          try { if (navigator.vibrate) navigator.vibrate([150, 80, 150]); } catch (e) {}
+        }
+      }, 1000);
+    }
+
+    async function ensureConvSession() {
+      const chatGate = await canStartChat();
+      if (!chatGate.allow) {
+        showQuotaModal("chat");
+        setConvStatus("Kuota ngobrol hari ini habis — mode lihat saja.");
+        return false;
+      }
+      if (convSecondsLeft <= 0 && !convSessionActive) {
+        setConvStatus("Sesi 30 detik sudah habis. Tekan RESET untuk mulai sesi baru.");
+        return false;
+      }
+      if (!convSessionActive) startConvSessionTimer();
+      return true;
+    }
+
+    function clearConversation() {
+      // Jika sesi masih jalan, hitung detik yang sudah terpakai
+      if (convSessionActive && convSecondsLeft < 30) {
+        const used = 30 - convSecondsLeft;
+        if (used > 0) { addChatUsageSec(used).then(() => updateQuotaBanner()); }
+      }
+      convHistory = [];
+      convLastGema = "Halo! Pilih bahasa di atas, lalu ngobrol. GEMA akan jawab dalam bahasa yang kamu pilih.";
+      const chat = document.getElementById("convChat");
+      if (chat) {
+        chat.innerHTML = "";
+        appendConvBubble("assistant", convLastGema);
+      }
+      const inp = document.getElementById("convInput");
+      if (inp) inp.value = "";
+      resetConvTimerUI();
+      setConvStatus("Percakapan direset. Siap ngobrol lagi (30 detik per sesi).");
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    }
+
+    function getSpeechRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      return SR ? new SR() : null;
+    }
+
+    function refreshVoices() {
+      if (!window.speechSynthesis) {
+        convVoices = [];
+        return [];
+      }
+      convVoices = speechSynthesis.getVoices() || [];
+      return convVoices;
+    }
+
+    function findVoiceForLang(langCode) {
+      const voices = convVoices.length ? convVoices : refreshVoices();
+      if (!voices.length) return null;
+      const primary = (langCode || "id-ID").toLowerCase();
+      const base = primary.split("-")[0];
+      let v = voices.find(x => (x.lang || "").toLowerCase() === primary);
+      if (v) return v;
+      v = voices.find(x => (x.lang || "").toLowerCase().startsWith(base));
+      if (v) return v;
+      return null;
+    }
+
+    /** Pilih voice: utamakan gender hint dari nama voice sistem jika ada */
+    /** Satu suara ORI: utamakan cewek natural di bahasa yang dipilih */
+    function findVoiceFemale(langCode) {
+      const voices = convVoices.length ? convVoices : refreshVoices();
+      if (!voices.length) return null;
+      const primary = (langCode || "id-ID").toLowerCase();
+      const base = primary.split("-")[0];
+      const pool = voices.filter(x => {
+        const l = (x.lang || "").toLowerCase();
+        return l === primary || l.startsWith(base);
+      });
+      const list = pool.length ? pool : voices;
+      const femaleRe = /female|woman|girl|samantha|victoria|moira|fiona|karen|zira|google.*bahasa indonesia|id-id-x-dfn|wavenet.*a\b|neural.*female/i;
+      const f = list.find(x => femaleRe.test(x.name || "") || femaleRe.test(x.voiceURI || ""));
+      if (f) return f;
+      // fallback: voice pertama untuk bahasa itu
+      return findVoiceForLang(langCode);
+    }
+
+    function voiceInstallHint(langCode) {
+      const code = langCode || getConvLang();
+      if (code === "id-ID") {
+        return "Suara Indonesia belum terpasang. Android: Setelan → Bahasa & ketikkan → Output teks ke ucapan → pasang suara Indonesia. iPhone: Settings → Accessibility → Spoken Content → Voices → Indonesian.";
+      }
+      if (code === "ar-SA" || (code || "").startsWith("ar")) {
+        return "Suara Arab belum terpasang. Android: Setelan → Output teks ke ucapan → pasang Arabic. iPhone: Settings → Spoken Content → Voices → Arabic. Cukup sekali unduh.";
+      }
+      const name = (CONV_LANGS[code] || {}).name || code;
+      return "Suara " + name + " belum ada di HP. Pasang data suara bahasa ini di Setelan sistem (Text-to-speech / Spoken Content). Cukup sekali.";
+    }
+
+    function updateConvLangSupportUI() {
+      const el = document.getElementById("convLangSupport");
+      if (!el) return;
+      const code = getConvLang();
+      const name = (CONV_LANGS[code] || {}).name || code;
+      const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      const voice = findVoiceForLang(code);
+      const parts = [];
+      if (!hasSR) {
+        parts.push("MIC (STT) tidak didukung browser ini");
+        el.className = "conv-lang-support bad";
+      } else {
+        parts.push("MIC: " + code);
+        el.className = "conv-lang-support";
+      }
+      if (!window.speechSynthesis) {
+        parts.push("TTS bawaan HP tidak didukung");
+        el.className = "conv-lang-support bad";
+      } else if (!voice) {
+        parts.push(voiceInstallHint(code));
+        el.className = "conv-lang-support warn";
+      } else {
+        parts.push("TTS: cewek natural · " + (voice.name || voice.lang));
+      }
+      el.textContent = parts.join(" · ");
+    }
+
+    function onConvLangChange(ev) {
+      const el = document.getElementById("convLang");
+      if (!el) return;
+      const code = el.value;
+      // Klik opsi terkunci (meski disabled kadang tetap fire di beberapa browser) / user paksa
+      if (!convTierIsPro() && FREE_CONV_LANGS.indexOf(code) < 0) {
+        el.value = localStorage.getItem("gema_conv_lang") || "id-ID";
+        if (FREE_CONV_LANGS.indexOf(el.value) < 0) el.value = "id-ID";
+        openUpgradeModal("locked");
+        return;
+      }
+      try { localStorage.setItem("gema_conv_lang", code); } catch (e) {}
+      updateConvLangSupportUI();
+      const info = CONV_LANGS[code];
+      setConvStatus("Bahasa diganti ke " + (info ? info.name : code) + " (" + code + "). MIC & jawaban GEMA mengikuti ini.");
+    }
+
+    function initConvLang() {
+      const el = document.getElementById("convLang");
+      if (!el) return;
+      let saved = "id-ID";
+      try { saved = localStorage.getItem("gema_conv_lang") || "id-ID"; } catch (e) {}
+      if (CONV_LANGS[saved]) el.value = saved;
+      refreshVoices();
+      if (window.speechSynthesis) {
+        speechSynthesis.onvoiceschanged = () => {
+          refreshVoices();
+          updateConvLangSupportUI();
+        };
+      }
+      updateConvLangSupportUI();
+      applyConvTierLimits();
+    }
+
+    async function toggleMic() {
+      const btn = document.getElementById("btnMic");
+      if (convRecording) {
+        stopMic(true);
+        return;
+      }
+      if (!(await ensureConvSession())) return;
+      const rec = getSpeechRecognition();
+      if (!rec) {
+        setConvStatus("Browser tidak mendukung MIC (Speech Recognition). Ketik saja, atau pakai Chrome.");
+        return;
+      }
+      convRecognition = rec;
+      rec.lang = getConvLang();
+      rec.interimResults = true;
+      rec.continuous = false;
+      let finalText = "";
+      rec.onresult = (ev) => {
+        let interim = "";
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const t = ev.results[i][0].transcript;
+          if (ev.results[i].isFinal) finalText += t + " ";
+          else interim += t;
+        }
+        const shown = (finalText + interim).trim();
+        const inp = document.getElementById("convInput");
+        if (inp) inp.value = shown;
+      };
+      rec.onerror = (e) => {
+        setConvStatus("Mic: " + (e.error || "error"));
+        stopMic(false);
+      };
+      rec.onend = () => {
+        const was = convRecording;
+        convRecording = false;
+        if (btn) {
+          btn.classList.remove("recording");
+          btn.textContent = "🎤 MIC";
+        }
+        const text = (document.getElementById("convInput").value || "").trim();
+        if (was && text) {
+          setConvStatus("Teks dari mic siap — menekan KIRIM…");
+          sendConversation();
+        } else if (was) {
+          setConvStatus("Mic berhenti (tidak ada teks)");
+        }
+      };
+      try {
+        rec.start();
+        convRecording = true;
+        btn.classList.add("recording");
+        btn.textContent = "⏹ STOP";
+        setConvStatus("🎤 Mendengarkan… bicara sekarang");
+      } catch (err) {
+        setConvStatus("Gagal mic: " + err.message);
+      }
+    }
+
+    function stopMic(manual) {
+      convRecording = false;
+      const btn = document.getElementById("btnMic");
+      if (btn) {
+        btn.classList.remove("recording");
+        btn.textContent = "🎤 MIC";
+      }
+      if (convRecognition) {
+        try { convRecognition.stop(); } catch (e) {}
+        convRecognition = null;
+      }
+      if (manual) setConvStatus("Mic dihentikan");
+    }
+
+    async function sendConversation() {
+      if (convBusy) return;
+      if (!(await ensureConvSession())) return;
+      const inp = document.getElementById("convInput");
+      const text = (inp && inp.value || "").trim();
+      if (!text) {
+        setConvStatus("Ketik atau rekam dulu, baru kirim.");
+        return;
+      }
+      const apiKey = (document.getElementById("apiKey") && document.getElementById("apiKey").value || "").trim();
+      if (!apiKey.startsWith("gsk_")) {
+        setConvStatus("Isi Groq API Key di atas dulu (butuh untuk GEMA menjawab).");
+        return;
+      }
+
+      appendConvBubble("user", text);
+      convHistory.push({ role: "user", content: text });
+      if (inp) inp.value = "";
+      convBusy = true;
+      const sendBtn = document.getElementById("btnSendConv");
+      if (sendBtn) sendBtn.disabled = true;
+      setConvStatus("GEMA sedang menjawab…");
+
+      try {
+        let model = document.getElementById("modelSelect").value;
+        if (model === "custom") {
+          model = (document.getElementById("customModel").value || "").trim() || "openai/gpt-oss-20b";
+        }
+        // Ambil history terakhir biar hemat token
+        const hist = convHistory.slice(-12);
+        const messages = [
+          { role: "system", content: buildConvSystem() },
+          ...hist.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: h.content }))
+        ];
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 512
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || ("HTTP " + response.status));
+        }
+        const data = await response.json();
+        let reply = (data.choices?.[0]?.message?.content || "").trim();
+        if (!reply) throw new Error("Jawaban kosong");
+
+        convHistory.push({ role: "assistant", content: reply });
+        convLastGema = reply;
+        appendConvBubble("assistant", reply);
+        setConvStatus("GEMA menjawab — tekan 🔊 SUARA GEMA untuk dengar");
+        // Auto-speak jawaban (opsional, nyaman untuk latihan)
+        speakText(reply, getConvLang());
+      } catch (err) {
+        setConvStatus("Gagal: " + (err.message || err));
+      } finally {
+        convBusy = false;
+        if (sendBtn) sendBtn.disabled = false;
+      }
+    }
+
+    function speakText(text, lang) {
+      if (!window.speechSynthesis || !text) return;
+      speechSynthesis.cancel();
+      refreshVoices();
+      const code = lang || getConvLang();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = code;
+      // Suara ORI: cewek natural — rate/pitch default enak
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      const voice = findVoiceFemale(code);
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang || code;
+        setConvStatus("🔊 Suara GEMA (cewek natural)");
+      } else {
+        setConvStatus("⚠️ " + voiceInstallHint(code));
+      }
+      u.onerror = () => setConvStatus("Gagal memutar suara bawaan HP");
+      speechSynthesis.speak(u);
+    }
+
+    function speakLastGema() {
+      if (!convLastGema) {
+        setConvStatus("Belum ada jawaban GEMA.");
+        return;
+      }
+      if (!window.speechSynthesis) {
+        setConvStatus("Browser tidak mendukung TTS bawaan HP.");
+        return;
+      }
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        setConvStatus("Suara dihentikan");
+        return;
+      }
+      setConvStatus("🔊 Memutar (bawaan HP)…");
+      speakText(convLastGema, getConvLang());
+    }
+
+    // Enter = kirim (Shift+Enter baris baru)
+    (function bindConvInput() {
+      const inp = document.getElementById("convInput");
+      if (inp) {
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendConversation();
+          }
+        });
+      }
+    })();
+
+    // ===================== START =====================
+    init();
+    initConvLang();
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    }
+  </script>
+</body>
+</html>
