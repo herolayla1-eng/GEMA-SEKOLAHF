@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEMA Admin</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8;
+      --primary: #3b82f6; --ok: #22c55e; --danger: #ef4444; --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, sans-serif;
+      background: var(--bg); color: var(--text); padding: 16px;
+    }
+    h1 { font-size: 1.3rem; margin: 0 0 8px; }
+    .sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+    input, select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 10px; padding: 10px 14px; border: none; border-radius: 8px;
+      background: var(--primary); color: #fff; font-weight: 700; cursor: pointer;
+    }
+    button.secondary { background: #475569; }
+    button.danger { background: var(--danger); }
+    button.ok { background: var(--ok); color: #052e16; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .row > * { flex: 1; min-width: 120px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .lite { background: #1e3a5f; color: #93c5fd; }
+    .sultan { background: #3b2f0b; color: #fde68a; }
+    .raja { background: #3b0764; color: #e9d5ff; }
+    .off { opacity: 0.5; }
+    #msg { margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+    #loginBox, #panel { max-width: 900px; margin: 0 auto; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="loginBox">
+    <h1>🔐 GEMA Admin</h1>
+    <p class="sub">Hanya untuk penjual. Jangan share link ini.</p>
+    <div class="card">
+      <label>Password Admin</label>
+      <input type="password" id="password" placeholder="ADMIN_PASSWORD dari Vercel" />
+      <button onclick="doLogin()">Masuk</button>
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <div id="panel" class="hidden">
+    <h1>🔐 GEMA Admin</h1>
+    <p class="sub">Kelola kode aktivasi · <a href="/" style="color:#93c5fd">← App user</a></p>
+
+    <div class="card">
+      <strong>Buat kode baru</strong>
+      <div class="row">
+        <div>
+          <label>Kode</label>
+          <input id="newCode" placeholder="SULTAN-9K2M" />
+        </div>
+        <div>
+          <label>Tier</label>
+          <select id="newTier">
+            <option value="lite">Lite (10 soal / 5 mnt)</option>
+            <option value="sultan">Sultan (100 soal / 30 mnt)</option>
+            <option value="raja">Raja Pro (500 soal / 90 mnt)</option>
+          </select>
+        </div>
+      </div>
+      <button class="ok" onclick="createCode()">+ Buat Kode</button>
+      <button class="secondary" onclick="genRandom()">🎲 Acak Kode</button>
+    </div>
+
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:8px;">
+        <strong style="flex:2">Daftar kode</strong>
+        <button class="secondary" onclick="loadList()">🔄 Refresh</button>
+        <button class="secondary" onclick="logout()">Keluar</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Tier</th>
+              <th>Device</th>
+              <th>Ganti</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div id="listMsg" style="margin-top:8px;font-size:0.85rem;color:var(--muted);"></div>
+    </div>
+  </div>
+
+  <script>
+    function getPw() {
+      return sessionStorage.getItem("gema_admin_pw") || "";
+    }
+    function setMsg(t) {
+      const el = document.getElementById("msg");
+      if (el) el.textContent = t;
+    }
+
+    async function api(body) {
+      const res = await fetch("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": getPw()
+        },
+        body: JSON.stringify(body)
+      });
+      return res.json();
+    }
+
+    async function doLogin() {
+      const pw = document.getElementById("password").value.trim();
+      if (!pw) return setMsg("Isi password");
+      sessionStorage.setItem("gema_admin_pw", pw);
+      const data = await api({ action: "list" });
+      if (!data.ok) {
+        sessionStorage.removeItem("gema_admin_pw");
+        setMsg(data.error || "Gagal login");
+        return;
+      }
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("panel").classList.remove("hidden");
+      renderList(data.codes || []);
+    }
+
+    function logout() {
+      sessionStorage.removeItem("gema_admin_pw");
+      location.reload();
+    }
+
+    function genRandom() {
+      const tier = document.getElementById("newTier").value.toUpperCase();
+      const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+      document.getElementById("newCode").value = tier + "-" + rand;
+    }
+
+    async function createCode() {
+      const code = document.getElementById("newCode").value.trim();
+      const tier = document.getElementById("newTier").value;
+      const data = await api({ action: "create", code, tier });
+      document.getElementById("listMsg").textContent = data.ok
+        ? "✅ Kode dibuat: " + code
+        : "❌ " + (data.error || "Gagal");
+      if (data.ok) {
+        document.getElementById("newCode").value = "";
+        loadList();
+      }
+    }
+
+    async function loadList() {
+      const data = await api({ action: "list" });
+      if (!data.ok) {
+        document.getElementById("listMsg").textContent = data.error || "Gagal load";
+        return;
+      }
+      renderList(data.codes || []);
+    }
+
+    function renderList(codes) {
+      const tb = document.getElementById("tbody");
+      if (!codes.length) {
+        tb.innerHTML = "<tr><td colspan='6'>Belum ada kode. Buat di atas.</td></tr>";
+        return;
+      }
+      tb.innerHTML = codes.map(c => {
+        const tierCls = c.tier === "raja" ? "raja" : c.tier === "sultan" ? "sultan" : "lite";
+        const device = c.deviceId ? (c.deviceId.slice(0, 10) + "…") : "—";
+        const changes = c.deviceChanges || 0;
+        const active = c.active !== false;
+        return `<tr class="${active ? "" : "off"}">
+          <td><code>${c.code}</code></td>
+          <td><span class="badge ${tierCls}">${c.tier}</span></td>
+          <td>${device}</td>
+          <td>${changes}</td>
+          <td>${active ? "✅ Aktif" : "⛔ Nonaktif"}</td>
+          <td>
+            <button class="secondary" style="margin:2px;padding:6px 8px;font-size:0.75rem;"
+              onclick="toggleActive('${c.code}', ${!active})">${active ? "Nonaktifkan" : "Aktifkan"}</button>
+            ${c.tier === "raja" ? `<button class="secondary" style="margin:2px;padding:6px 8px;font-size:0.75rem;"
+              onclick="resetDev('${c.code}')">Reset catatan device</button>` : ""}
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    async function toggleActive(code, active) {
+      if (!confirm((active ? "Aktifkan" : "Nonaktifkan") + " kode " + code + "?")) return;
+      const data = await api({ action: "setActive", code, active });
+      document.getElementById("listMsg").textContent = data.ok ? "OK" : (data.error || "Gagal");
+      loadList();
+    }
+
+    async function resetDev(code) {
+      if (!confirm("Lepas device untuk " + code + "? (hitung 1x jatah ganti Raja Pro)")) return;
+      const data = await api({ action: "resetDevice", code });
+      document.getElementById("listMsg").textContent = data.ok
+        ? "Device dilepas. User bisa aktivasi di HP baru."
+        : (data.error || "Gagal");
+      loadList();
+    }
+
+    // Auto-login jika session masih ada
+    if (getPw()) {
+      doLogin();
+    }
+  </script>
+</body>
+</html>
